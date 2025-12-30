@@ -1,1478 +1,2025 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no" />
-<title>Locked Till Morning — Christmas Update (No Flashlight)</title>
-<style>
-  :root{
-    --bg:#0b1020;
-    --panel:rgba(10,10,14,.94);
-    --ui:rgba(10,10,14,.45);
-    --btn:rgba(31,38,51,0.88);
-    --btn2:#1f2633;
-    --txt:#fff;
-  }
-  body{margin:0;overflow:hidden;background:var(--bg);font-family:Arial,sans-serif;color:var(--txt)}
-  canvas{display:block;touch-action:none}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <title>🎄 Locked Till Morning 🎄</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(10,14,18,.86);
+      --panel2:rgba(16,22,34,.82);
+      --text:#e9eefc;
+      --muted:#aab6d6;
+      --accent:#7bdcff;
+      --good:#67f0a5;
+      --warn:#ffd36b;
+      --bad:#ff6b7a;
+      --shadow:0 14px 40px rgba(0,0,0,.45);
+      --radius:18px;
+      --btn:#1c2a44;
+      --btn2:#24365a;
+      --btn3:#2d4474;
+    }
+    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+    html,body{height:100%; margin:0; background:radial-gradient(1200px 700px at 50% 0%, #172a54 0%, #0b1220 55%, #070b14 100%); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+    body{overflow:hidden;}
 
-  .panel{
-    position:fixed;inset:0;background:var(--panel);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:10px;padding:20px;text-align:center
-  }
-  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-  button,select,input{
-    background:var(--btn2);color:#fff;border:none;border-radius:12px;
-    padding:10px 12px;font-size:14px;min-width:170px
-  }
-  input{min-width:230px;text-align:center}
-  button{background:var(--btn)}
+    /* ===== Canvas ===== */
+    #wrap{position:fixed; inset:0; display:flex; align-items:stretch; justify-content:center;}
+    #game{
+      width:100vw; height:100vh;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background:#0b1220;
+      display:block;
+      touch-action:none;
+    }
 
-  /* ✅ iOS multi-touch friendliness */
-  button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-  .pad button,.rightStack button{touch-action:none}
+    /* ===== Screens ===== */
+    .screen{
+      position:fixed; inset:0; display:none;
+      align-items:center; justify-content:center;
+      padding:18px;
+      background:radial-gradient(1000px 700px at 50% 0%, rgba(255,255,255,.08) 0%, rgba(0,0,0,.58) 55%, rgba(0,0,0,.8) 100%);
+      z-index:20;
+    }
+    .screen.show{display:flex;}
+    .card{
+      width:min(920px, 94vw);
+      max-height:92vh;
+      overflow:auto;
+      background:linear-gradient(180deg, rgba(20,28,48,.88), rgba(12,16,26,.86));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .title{
+      font-weight:900; letter-spacing:.3px;
+      font-size:clamp(28px, 4.6vw, 44px);
+      margin:0 0 6px 0;
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .subtitle{margin:0 0 14px 0; color:var(--muted); line-height:1.4;}
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
+    .spacer{height:12px;}
+    .hr{height:1px; background:rgba(255,255,255,.08); margin:12px 0;}
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px; border-radius:999px;
+      background:rgba(123,220,255,.10); border:1px solid rgba(123,220,255,.22);
+      color:#dff6ff; font-weight:700; font-size:13px;
+    }
+    .badge.good{background:rgba(103,240,165,.10); border-color:rgba(103,240,165,.22);}
+    .badge.warn{background:rgba(255,211,107,.10); border-color:rgba(255,211,107,.22);}
+    .badge.bad{background:rgba(255,107,122,.10); border-color:rgba(255,107,122,.22);}
 
-  #ui{
-    position:fixed;top:8px;left:8px;font-size:12px;line-height:1.35;
-    background:var(--ui);padding:8px 10px;border-radius:12px;display:none
-  }
-  #controls{position:fixed;inset:0;display:none;pointer-events:none}
-  #toast{
-    position:fixed;left:50%;transform:translateX(-50%);bottom:120px;
-    background:rgba(10,10,14,.75);padding:10px 12px;border-radius:12px;font-size:13px;display:none
-  }
+    /* ===== Buttons / Inputs ===== */
+    .btn{
+      border:0;
+      border-radius:14px;
+      padding:12px 14px;
+      background:linear-gradient(180deg, var(--btn2), var(--btn));
+      color:var(--text);
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:0 10px 18px rgba(0,0,0,.35);
+      transition:transform .08s ease, filter .15s ease;
+      user-select:none;
+    }
+    .btn:active{transform:translateY(1px) scale(.99); filter:brightness(1.06);}
+    .btn.ghost{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); box-shadow:none;}
+    .btn.good{background:linear-gradient(180deg, #2b7a5a, #1e5640);}
+    .btn.bad{background:linear-gradient(180deg, #7a2b3b, #561e2a);}
+    .btn.small{padding:10px 12px; border-radius:12px; font-weight:800; font-size:14px;}
+    .btn.wide{min-width:220px;}
+    .inp, select{
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      color:var(--text);
+      border-radius:12px;
+      padding:12px 12px;
+      outline:none;
+      font-weight:700;
+      min-width:220px;
+    }
+    .muted{color:var(--muted);}
+    .tiny{font-size:13px; color:var(--muted);}
 
-  .pad{
-    position:fixed;left:14px;bottom:14px;width:170px;height:170px;
-    display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
-    gap:8px;pointer-events:auto
-  }
-  .pad button{
-    min-width:auto;width:100%;height:100%;border-radius:14px;font-weight:700;font-size:14px;
-    background:rgba(31,38,51,0.85);backdrop-filter:blur(2px)
-  }
-  .pad .empty{visibility:hidden}
+    /* ===== Multiplayer list ===== */
+    .serverRow{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; padding:12px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px;
+      margin:10px 0;
+    }
 
-  .rightStack{
-    position:fixed;right:14px;bottom:14px;display:flex;flex-direction:column;gap:10px;
-    pointer-events:auto
-  }
-  .rightStack button{
-    min-width:170px;background:rgba(31,38,51,0.85);backdrop-filter:blur(2px)
-  }
+    /* ===== In-game HUD ===== */
+    #hud{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:10;
+    }
+    .hudTop{
+      position:absolute; left:10px; top:10px;
+      display:flex; flex-direction:column; gap:8px;
+      pointer-events:none;
+    }
+    .hudBar{
+      width:min(420px, 92vw);
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px;
+      padding:10px 10px;
+      backdrop-filter:blur(6px);
+    }
+    .barRow{display:flex; align-items:center; justify-content:space-between; gap:10px; font-weight:900;}
+    .barLine{
+      height:10px; border-radius:999px;
+      background:rgba(255,255,255,.10);
+      overflow:hidden;
+      margin-top:8px;
+    }
+    .barFill{height:100%; width:50%; background:linear-gradient(90deg, rgba(123,220,255,.95), rgba(103,240,165,.95));}
+    .barFill.hp{background:linear-gradient(90deg, rgba(255,107,122,.95), rgba(255,211,107,.95));}
+    .barFill.hun{background:linear-gradient(90deg, rgba(255,211,107,.95), rgba(123,220,255,.75));}
+    .barFill.thr{background:linear-gradient(90deg, rgba(123,220,255,.95), rgba(123,220,255,.55));}
+    .barFill.sta{background:linear-gradient(90deg, rgba(103,240,165,.95), rgba(123,220,255,.65));}
 
-  .small{font-size:12px;opacity:.9;max-width:560px}
-  .divider{height:1px;width:100%;max-width:560px;background:rgba(255,255,255,.12);margin:10px 0}
-  .list{width:100%;max-width:560px;text-align:left;background:rgba(255,255,255,.06);border-radius:12px;padding:10px}
-  .serverRow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px;border-radius:10px}
-  .serverRow:nth-child(odd){background:rgba(255,255,255,.05)}
-  .badge{font-size:12px;opacity:.88}
+    /* ===== Mobile controls ===== */
+    #controls{
+      position:absolute; inset:0;
+      pointer-events:none;
+    }
+    .pad{
+      position:absolute; left:12px; bottom:12px;
+      width:170px; height:170px;
+      pointer-events:auto;
+      opacity:.95;
+    }
+    .padGrid{
+      position:absolute; inset:0;
+      display:grid; grid-template-columns:repeat(3, 1fr); grid-template-rows:repeat(3, 1fr);
+      gap:10px;
+    }
+    .padBtn{
+      border-radius:18px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:1000; color:#e9eefc;
+      user-select:none;
+      touch-action:none;
+    }
+    .padBtn:active{filter:brightness(1.2); transform:scale(.99);}
+    .padBtn.empty{background:transparent; border-color:transparent;}
+    .rightStack{
+      position:absolute; right:12px; bottom:12px;
+      display:flex; flex-direction:column; gap:10px;
+      pointer-events:auto;
+    }
+    .actionBtn{
+      width:160px;
+      padding:14px 14px;
+      border-radius:18px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.12);
+      color:#e9eefc;
+      font-weight:1000;
+      user-select:none;
+      touch-action:none;
+    }
+    .actionBtn:active{filter:brightness(1.2); transform:scale(.99);}
+    .actionBtn.good{background:rgba(103,240,165,.16); border-color:rgba(103,240,165,.22);}
+    .actionBtn.bad{background:rgba(255,107,122,.16); border-color:rgba(255,107,122,.22);}
 
-  #invOverlay{
-    position:fixed;inset:0;background:rgba(10,10,14,.92);
-    display:none;align-items:center;justify-content:center;padding:18px
-  }
-  #invCard{
-    width:min(720px,100%);background:rgba(255,255,255,.06);
-    border-radius:16px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.35)
-  }
-  #invTop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
-  #invGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .invItem{
-    background:rgba(31,38,51,0.85);border-radius:14px;padding:12px;
-    display:flex;justify-content:space-between;align-items:center;gap:10px
-  }
-  .invItem .left{display:flex;flex-direction:column;gap:4px;text-align:left}
-  .invItem .name{font-weight:800}
-  .invItem .desc{font-size:12px;opacity:.86}
-  .invItem .count{font-size:12px;opacity:.9}
-  .invItem button{min-width:110px}
+    /* Inventory tray */
+    #invTray{
+      position:absolute; left:50%; transform:translateX(-50%);
+      bottom:12px;
+      display:flex; gap:10px;
+      pointer-events:auto;
+      padding:8px;
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:18px;
+      backdrop-filter:blur(6px);
+      max-width:92vw;
+      overflow:auto;
+    }
+    .slot{
+      min-width:86px; padding:10px;
+      border-radius:16px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10);
+      display:flex; flex-direction:column; gap:6px;
+      align-items:center; justify-content:center;
+      user-select:none;
+    }
+    .slot:active{filter:brightness(1.2);}
+    .slotName{font-weight:900; font-size:12px; text-align:center; color:#e9eefc;}
+    .slotQty{font-weight:900; font-size:12px; color:var(--muted);}
 
-  .xmasTitle{
-    font-weight:900;font-size:30px;letter-spacing:.5px;
-    text-shadow:0 2px 0 rgba(0,0,0,.25), 0 0 18px rgba(120,200,255,.15)
-  }
-  .xmasSpark{font-size:14px;opacity:.95}
-  .xmasLine{
-    max-width:560px;width:100%;height:1px;
-    background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.20), rgba(255,255,255,0));
-    margin:8px 0 6px 0
-  }
-</style>
+    /* Toast */
+    #toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      top:14px; z-index:50;
+      background:rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.12);
+      padding:10px 12px;
+      border-radius:14px;
+      color:#fff;
+      font-weight:900;
+      display:none;
+      max-width:92vw;
+      text-align:center;
+      backdrop-filter:blur(6px);
+    }
+
+    /* Make inventory not cover movement pad on tiny screens */
+    @media (max-width: 430px){
+      .pad{width:150px; height:150px;}
+      .actionBtn{width:146px;}
+      .slot{min-width:78px;}
+    }
+  </style>
 </head>
+
 <body>
-<canvas id="c"></canvas>
+<div id="wrap">
+  <canvas id="game"></canvas>
 
-<div id="ui">
-  <div>
-    <b>❤️</b> <span id="health">100</span> &nbsp;
-    <b>🍗</b> <span id="hunger">100</span> &nbsp;
-    <b>💧</b> <span id="thirst">100</span>
-  </div>
-  <div>
-    <b>⚡</b> <span id="stamina">100</span>
-  </div>
-  <div>
-    <b>⏰</b> <span id="time">12:00 AM</span> &nbsp;
-    <span id="diffLabel">Easy</span>
-  </div>
-  <div id="extraHud" class="badge"></div>
-  <div id="hideHint" class="badge"></div>
-</div>
+  <div id="hud">
+    <div class="hudTop">
+      <div class="hudBar">
+        <div class="barRow">
+          <div id="timeText">12:00 AM</div>
+          <div class="badge warn" id="diffBadge">Easy</div>
+        </div>
+        <div class="tiny" id="goalText">Survive until 8:00 AM • 1 sec = 1 min</div>
+      </div>
 
-<div id="controls">
-  <div class="pad">
-    <button class="empty"></button>
-    <button id="btnUp">▲</button>
-    <button class="empty"></button>
+      <div class="hudBar">
+        <div class="barRow"><div>Health</div><div id="hpText">100</div></div>
+        <div class="barLine"><div class="barFill hp" id="hpFill"></div></div>
 
-    <button id="btnLeft">◀</button>
-    <button class="empty"></button>
-    <button id="btnRight">▶</button>
+        <div class="spacer"></div>
 
-    <button class="empty"></button>
-    <button id="btnDownReal">▼</button>
-    <button class="empty"></button>
-  </div>
+        <div class="barRow"><div>Hunger</div><div id="hunText">100</div></div>
+        <div class="barLine"><div class="barFill hun" id="hunFill"></div></div>
 
-  <div class="rightStack">
-    <button id="sprintBtn">🏃 Hold to Sprint</button>
-    <button id="invBtn">🎒 Inventory</button>
-    <button id="hideBtn">🫥 Hide</button>
-    <button id="pauseBtn">⏸ Menu</button>
+        <div class="spacer"></div>
+
+        <div class="barRow"><div>Thirst</div><div id="thrText">100</div></div>
+        <div class="barLine"><div class="barFill thr" id="thrFill"></div></div>
+
+        <div class="spacer"></div>
+
+        <div class="barRow"><div>Stamina</div><div id="staText">100</div></div>
+        <div class="barLine"><div class="barFill sta" id="staFill"></div></div>
+
+        <div class="spacer"></div>
+
+        <div class="tiny" id="hideHint">Hide near lockers / plants / behind kiosks</div>
+      </div>
+    </div>
+
+    <div id="controls">
+      <div class="pad">
+        <div class="padGrid">
+          <div class="padBtn empty"></div>
+          <div class="padBtn" data-key="up">▲</div>
+          <div class="padBtn empty"></div>
+
+          <div class="padBtn" data-key="left">◀</div>
+          <div class="padBtn empty"></div>
+          <div class="padBtn" data-key="right">▶</div>
+
+          <div class="padBtn empty"></div>
+          <div class="padBtn" data-key="down">▼</div>
+          <div class="padBtn empty"></div>
+        </div>
+      </div>
+
+      <div class="rightStack">
+        <div class="actionBtn good" id="sprintHoldBtn">HOLD TO SPRINT</div>
+        <div class="actionBtn" id="hideBtn">HIDE</div>
+        <div class="actionBtn" id="useBtn">USE / PICKUP</div>
+        <div class="actionBtn bad" id="pauseBtn">MENU</div>
+      </div>
+
+      <div id="invTray"></div>
+    </div>
   </div>
 </div>
 
 <div id="toast"></div>
 
-<div id="invOverlay">
-  <div id="invCard">
-    <div id="invTop">
-      <div style="text-align:left">
-        <div style="font-weight:900;font-size:18px">Inventory</div>
-        <div class="badge" id="invHint">Tap USE to eat/drink items.</div>
+<!-- ===== MENU ===== -->
+<div class="screen show" id="menuScreen">
+  <div class="card">
+    <div class="title">🎄 Locked Till Morning 🎄 <span class="badge good">Christmas Update</span></div>
+    <p class="subtitle">
+      Pixel-art mall survival. You’re locked in after closing. Avoid employees and survive until <b>8:00 AM</b> when the mall opens.
+      <br><span class="tiny">Clock: 1 real second = 1 in-game minute (8 minutes to win).</span>
+    </p>
+
+    <div class="row">
+      <div>
+        <div class="tiny">Your name (saved):</div>
+        <input class="inp" id="nameInput" maxlength="18" />
       </div>
-      <button id="invCloseBtn" style="min-width:140px">Close</button>
+
+      <div>
+        <div class="tiny">Difficulty:</div>
+        <select id="diffSelect">
+          <option value="easy">Easy</option>
+          <option value="medium" disabled>Medium (unlock: survive 5x)</option>
+          <option value="hard" disabled>Hard (unlock: survive 10x)</option>
+          <option value="santa">🎅 Santa (find 5 ornaments) — leaves Jan 11</option>
+        </select>
+      </div>
     </div>
-    <div id="invGrid"></div>
+
+    <div class="spacer"></div>
+
+    <div class="row">
+      <button class="btn wide good" id="playSoloBtn">Play (Solo)</button>
+      <button class="btn wide" id="multiBtn">Multiplayer</button>
+      <button class="btn wide ghost" id="howBtn">How To Play</button>
+      <button class="btn wide ghost" id="statsBtn">Stats</button>
+    </div>
+
+    <div class="hr"></div>
+
+    <div class="row">
+      <span class="badge warn">🎁 Tip:</span>
+      <span class="muted">“Meet Santa” area is the center atrium (no Santa). Cookies + milk spawn there.</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="tiny">
+      Note: Santa Difficulty + decorations leave on <b>January 11</b> (you can keep it anyway — it’s just a note).
+    </div>
   </div>
 </div>
 
-<div id="menu" class="panel">
-  <div class="xmasTitle">🎄 Locked Till Morning 🎄</div>
-  <div class="xmasSpark" id="eventNoteTop">✨ Christmas Update is active ✨</div>
-  <div class="xmasLine"></div>
-
-  <div class="small" id="eventNote">
-    Pixel-art mall survival. Start at <b>12:00 AM</b>. Survive until <b>8:00 AM</b>.<br>
-    Clock speed: <b>1 real second = 1 in-game minute</b> (8 real minutes to win).
+<!-- ===== HOW ===== -->
+<div class="screen" id="howScreen">
+  <div class="card">
+    <div class="title">How To Play</div>
+    <div class="subtitle">
+      - Survive from <b>12:00 AM</b> to <b>8:00 AM</b>.<br>
+      - Employees patrol. If one spots you, they chase and hit for <b>30 damage</b>.<br>
+      - Keep <b>Hunger</b> and <b>Thirst</b> up. If they hit 0, your health starts draining.<br>
+      - Sprint by <b>holding</b> the Sprint button. Sprint uses stamina. Stamina refills when you walk / rest.<br>
+      - Food & drinks go into your <b>inventory</b>. Tap an item slot to use it.<br>
+      - Drinks give stamina <b>except sodas</b>.<br>
+      - Hide near hiding spots: lockers, plants, kiosks. Press <b>HIDE</b> to tuck in.
+    </div>
+    <div class="row">
+      <button class="btn" id="howBackBtn">Back</button>
+    </div>
   </div>
-
-  <div class="divider"></div>
-
-  <div>
-    <div class="small" style="margin-bottom:6px;">Your Name (saved):</div>
-    <input id="nameInput" maxlength="16" />
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="row">
-    <button id="playBtn">Play (Solo)</button>
-    <button id="multiBtn">Multiplayer</button>
-  </div>
-
-  <div class="row">
-    <button id="howBtn">How To Play</button>
-    <button id="statsBtn">Stats</button>
-    <button id="lbBtn">Leaderboard</button>
-  </div>
-
-  <div class="divider"></div>
-
-  <div style="max-width:560px;width:100%;">
-    <div class="small" style="margin-bottom:6px;">Difficulty:</div>
-    <select id="diffSelect"></select>
-    <div id="unlockText" class="small" style="margin-top:6px;"></div>
-  </div>
-
-  <div class="xmasLine"></div>
-  <div class="small" id="eventNoteBottom">🎁 Tip: Meet-Santa area is the center atrium (no Santa).</div>
 </div>
 
-<div id="how" class="panel" style="display:none;">
-  <h2 style="margin:0;">How To Play</h2>
-  <div class="small" style="text-align:left;max-width:560px;">
-    • Survive until <b>8:00 AM</b>.<br>
-    • Employees chase and attack you (slower).<br>
-    • Pickups go into your <b>Inventory</b>. Tap <b>USE</b> to eat/drink.<br>
-    • Food refills hunger. Drinks refill thirst. Drinks also give stamina <b>except soda</b>.<br>
-    • Sprint is <b>hold-to-sprint</b> (hold the Sprint button to run).<br>
-    • Use <b>Hide</b> at hiding spots (locker-door animation).<br>
-    • Clock speed: <b>1 second = 1 minute</b>.<br>
-    • Santa Difficulty: collect <b>5 ornaments</b> before <b>8:00 AM</b>.
+<!-- ===== STATS ===== -->
+<div class="screen" id="statsScreen">
+  <div class="card">
+    <div class="title">Stats</div>
+    <div class="subtitle" id="statsText"></div>
+    <div class="row">
+      <button class="btn" id="statsBackBtn">Back</button>
+      <button class="btn bad" id="resetBtn">Reset Save (local)</button>
+    </div>
   </div>
-  <button onclick="showPanel('menu')">Back</button>
 </div>
 
-<div id="stats" class="panel" style="display:none;">
-  <h2 style="margin:0;">Stats</h2>
-  <div class="list" id="statsBox"></div>
-  <button onclick="showPanel('menu')">Back</button>
-</div>
-
-<div id="leaderboard" class="panel" style="display:none;">
-  <h2 style="margin:0;">Leaderboard</h2>
-  <div class="small">Saved on your device.</div>
-  <div class="list" id="lbBox"></div>
-  <button onclick="showPanel('menu')">Back</button>
-</div>
-
-<div id="multiplayer" class="panel" style="display:none;">
-  <h2 style="margin:0;">Multiplayer</h2>
-  <div class="small">Same-device lobby using multiple Safari tabs/windows.</div>
-  <div class="row">
-    <button id="hostBtn">Host</button>
-    <button id="joinBtn">Join</button>
+<!-- ===== PAUSE / INGAME MENU ===== -->
+<div class="screen" id="pauseScreen">
+  <div class="card">
+    <div class="title">Menu</div>
+    <p class="subtitle" id="pauseInfo"></p>
+    <div class="row">
+      <button class="btn good" id="resumeBtn">Resume</button>
+      <button class="btn" id="quitBtn">Quit to Menu</button>
+      <button class="btn ghost" id="mpLeaveBtn" style="display:none;">Leave Multiplayer</button>
+    </div>
   </div>
-  <button onclick="leaveMultiplayer()">Back</button>
 </div>
 
-<div id="hostSetup" class="panel" style="display:none;">
-  <h2 style="margin:0;">Host Server</h2>
-  <div class="small">Choose max players (2–6).</div>
-  <select id="maxPlayersSelect">
-    <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
-  </select>
-  <button id="createServerBtn">Create</button>
-  <button onclick="showPanel('multiplayer')">Back</button>
-</div>
+<!-- ===== MULTIPLAYER ===== -->
+<div class="screen" id="multiScreen">
+  <div class="card">
+    <div class="title">Multiplayer (Worldwide)</div>
+    <p class="subtitle">
+      Host creates a server. Others join from the list. Host can start when at least 2 players are in the lobby.
+    </p>
 
-<div id="lobby" class="panel" style="display:none;">
-  <h2 style="margin:0;">Lobby</h2>
-  <div class="small" id="lobbyInfo"></div>
-  <div class="list" id="playerList"></div>
-  <div class="row">
-    <button id="startHostBtn">Start (Host)</button>
-    <button id="leaveLobbyBtn">Leave</button>
+    <div class="row">
+      <button class="btn good" id="hostBtn">Host</button>
+      <button class="btn" id="joinBtn">Join</button>
+      <button class="btn ghost" id="multiBackBtn">Back</button>
+    </div>
+
+    <div class="hr"></div>
+
+    <div id="hostPanel" style="display:none;">
+      <div class="row">
+        <div>
+          <div class="tiny">Max players:</div>
+          <select id="maxPlayersSelect">
+            <option value="2">2 players</option>
+            <option value="3">3 players</option>
+            <option value="4" selected>4 players</option>
+            <option value="5">5 players</option>
+            <option value="6">6 players</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="tiny">Difficulty:</div>
+          <select id="hostDiffSelect">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+            <option value="santa">🎅 Santa</option>
+          </select>
+        </div>
+
+        <button class="btn good" id="createServerBtn">Create</button>
+      </div>
+      <div class="spacer"></div>
+      <div class="tiny muted">After creating, you’ll go to the lobby.</div>
+    </div>
+
+    <div id="joinPanel" style="display:none;">
+      <div class="row">
+        <button class="btn small" id="refreshServersBtn">Refresh</button>
+        <span class="tiny muted">Tap Join next to a server.</span>
+      </div>
+      <div id="serverList"></div>
+    </div>
   </div>
-  <div class="small">Host can start only with <b>2+ players</b>.</div>
 </div>
 
-<div id="joinList" class="panel" style="display:none;">
-  <h2 style="margin:0;">Join a Server</h2>
-  <div class="list" id="serverList"></div>
-  <button onclick="showPanel('multiplayer')">Back</button>
+<!-- ===== LOBBY ===== -->
+<div class="screen" id="lobbyScreen">
+  <div class="card">
+    <div class="title">Lobby</div>
+    <p class="subtitle" id="lobbyInfo"></p>
+    <div class="hr"></div>
+    <div id="playerList"></div>
+    <div class="hr"></div>
+    <div class="row">
+      <button class="btn good" id="hostStartBtn" style="display:none;">Start Game</button>
+      <button class="btn bad" id="lobbyLeaveBtn">Leave</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="tiny muted">Tip: If you close the tab, you auto-leave.</div>
+  </div>
 </div>
 
-<script>
+<script type="module">
+/* =========================================================
+   ✅ LOCKED TILL MORNING — FULL SINGLE-FILE GAME
+   - Mobile controls (D-pad, Hide, Use/Pickup, HOLD Sprint)
+   - Inventory (tap to use)
+   - Hunger/Thirst/Health/Stamina
+   - Employees patrol/chase (NOT too fast)
+   - Camera limited (you can't see whole map)
+   - Christmas center + cookies/milk
+   - Santa difficulty: find 5 ornaments
+   - Save: localStorage (survives updates on same domain)
+   - Multiplayer (worldwide) using Firebase Realtime DB
+   ========================================================= */
+
 /* =========================
-   SEASON / EVENT TIMER
+   🔥 Firebase (PASTE YOURS)
 ========================= */
-const EVENT_END = new Date(2026, 0, 11, 0, 0, 0).getTime();
-const CHRISTMAS_ACTIVE = Date.now() < EVENT_END;
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import {
+  getDatabase, ref, set, update, get, onValue, onDisconnect,
+  push, remove, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
 
-/* =========================
-   STORAGE (NO DATA LOSS)
-========================= */
-const LS = { profile:"ltm_profile", stats:"ltm_stats", lb:"ltm_leaderboard", servers:"ltm_servers" };
-const OLD_KEYS = {
-  profile: ["ltm_px_profile_v3","ltm_px_profile_v4","ltm_px_profile_v5"],
-  stats:   ["ltm_px_stats_v3","ltm_px_stats_v4","ltm_px_stats_v5"],
-  lb:      ["ltm_px_lb_v3","ltm_px_lb_v4","ltm_px_lb_v5"],
-  servers: ["ltm_px_servers_v3","ltm_px_servers_v4","ltm_px_servers_v5"]
+/* ===== PASTE YOUR firebaseConfig HERE ===== */
+const firebaseConfig = {
+  apiKey: "PASTE_YOURS",
+  authDomain: "PASTE_YOURS",
+  databaseURL: "PASTE_YOURS",
+  projectId: "PASTE_YOURS",
+  storageBucket: "PASTE_YOURS",
+  messagingSenderId: "PASTE_YOURS",
+  appId: "PASTE_YOURS"
 };
-function migrateKey(newKey, oldKeys){
-  if(localStorage.getItem(newKey)!=null) return;
-  for(const k of oldKeys){
-    const v=localStorage.getItem(k);
-    if(v!=null){ localStorage.setItem(newKey,v); return; }
-  }
-}
-migrateKey(LS.profile, OLD_KEYS.profile);
-migrateKey(LS.stats,   OLD_KEYS.stats);
-migrateKey(LS.lb,      OLD_KEYS.lb);
-migrateKey(LS.servers, OLD_KEYS.servers);
 
-const rand4=()=>Math.floor(Math.random()*10000).toString().padStart(4,"0");
-function safeParse(json,fallback){ try{return JSON.parse(json);}catch{return fallback;} }
-function loadProfile(){
-  let p=safeParse(localStorage.getItem(LS.profile),null);
-  if(!p||typeof p!=="object") p={name:"Player"+rand4()};
-  if(!p.name) p.name="Player"+rand4();
-  localStorage.setItem(LS.profile,JSON.stringify(p));
-  return p;
-}
-function saveProfile(p){ localStorage.setItem(LS.profile,JSON.stringify(p)); }
-function loadStats(){
-  let s=safeParse(localStorage.getItem(LS.stats),null);
-  if(!s||typeof s!=="object") s={totalPlaySeconds:0,survives:0,deaths:0};
-  s.totalPlaySeconds=Number(s.totalPlaySeconds||0);
-  s.survives=Number(s.survives||0);
-  s.deaths=Number(s.deaths||0);
-  localStorage.setItem(LS.stats,JSON.stringify(s));
-  return s;
-}
-function saveStats(s){ localStorage.setItem(LS.stats,JSON.stringify(s)); }
-function loadLB(){
-  let lb=safeParse(localStorage.getItem(LS.lb),[]);
-  if(!Array.isArray(lb)) lb=[];
-  return lb;
-}
-function saveLB(lb){ localStorage.setItem(LS.lb,JSON.stringify(lb)); }
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 /* =========================
-   CHRISTMAS FEATURES
+   Helpers
 ========================= */
-const EVENT = { christmas: CHRISTMAS_ACTIVE, snowParticles: CHRISTMAS_ACTIVE };
-let cheer = { active:false, t:0, dur:18 };
-function startCheer(){ cheer.active=true; cheer.t=cheer.dur; }
+const $ = (id)=>document.getElementById(id);
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp = (a,b,t)=>a+(b-a)*t;
+function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
+
+let toastTimer=null;
+function toast(msg){
+  const el=$("toast");
+  el.textContent=msg;
+  el.style.display="block";
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.style.display="none", 1600);
+}
 
 /* =========================
-   PANELS / TOAST
+   Save (localStorage)
 ========================= */
-const PANELS=["menu","how","stats","leaderboard","multiplayer","hostSetup","lobby","joinList"];
-function showPanel(id){ PANELS.forEach(p=>document.getElementById(p).style.display="none"); document.getElementById(id).style.display="flex"; }
-const toastEl=document.getElementById("toast");
-function toast(msg){ toastEl.textContent=msg; toastEl.style.display="block"; clearTimeout(toast._t); toast._t=setTimeout(()=>toastEl.style.display="none",1400); }
-const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-function jingle(){
+const SAVE_KEY="LTM_SAVE_V1";
+const defaultSave = ()=>({
+  name: "Player" + String(Math.floor(Math.random()*10000)).padStart(4,"0"),
+  totalPlaySeconds: 0,
+  survivedTotal: 0,
+  survivedStreak: 0,
+  bestStreak: 0,
+  unlocks: { medium:false, hard:false },
+  lastDifficulty: "easy"
+});
+function loadSave(){
   try{
-    const a=new (window.AudioContext||window.webkitAudioContext)();
-    const o=a.createOscillator();
-    const g=a.createGain();
-    o.type="triangle"; o.frequency.value=880;
-    g.gain.value=0.06;
-    o.connect(g); g.connect(a.destination);
-    o.start();
-    setTimeout(()=>{ o.frequency.value=1174; },90);
-    setTimeout(()=>{ g.gain.value=0.0001; },220);
-    setTimeout(()=>{ o.stop(); a.close(); },260);
-  }catch{}
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw) return defaultSave();
+    const s=JSON.parse(raw);
+    return { ...defaultSave(), ...s, unlocks:{...defaultSave().unlocks, ...(s.unlocks||{})} };
+  }catch{ return defaultSave(); }
+}
+function saveNow(){ localStorage.setItem(SAVE_KEY, JSON.stringify(SAVE)); refreshMenuLocks(); }
+let SAVE = loadSave();
+
+/* =========================
+   Game constants
+========================= */
+const TILE=16;               // pixel tile
+const WORLD_W=120;           // tiles
+const WORLD_H=80;            // tiles
+const VIEW_TILES_X=24;       // camera width in tiles
+const VIEW_TILES_Y=14;       // camera height in tiles
+
+const DAY_START_MIN=0;       // 12:00 AM
+const DAY_END_MIN=8*60;      // 8:00 AM
+const REAL_SEC_PER_INGAME_MIN=1; // 1 sec => 1 min
+
+/* =========================
+   Difficulty tuning
+========================= */
+function diffParams(key){
+  // Employees are intentionally not too fast.
+  if(key==="easy") return { enemySpeed: 0.70, enemySight: 4.8, enemyCount: 3, hungerDrain: 0.08, thirstDrain:0.10, staminaDrain:0.70, staminaRegen:0.95 };
+  if(key==="medium") return { enemySpeed: 0.85, enemySight: 5.6, enemyCount: 4, hungerDrain: 0.10, thirstDrain:0.12, staminaDrain:0.78, staminaRegen:0.90 };
+  if(key==="hard") return { enemySpeed: 1.00, enemySight: 6.2, enemyCount: 5, hungerDrain: 0.12, thirstDrain:0.15, staminaDrain:0.86, staminaRegen:0.84 };
+  if(key==="santa") return { enemySpeed: 0.88, enemySight: 5.8, enemyCount: 4, hungerDrain: 0.10, thirstDrain:0.12, staminaDrain:0.78, staminaRegen:0.90 };
+  return diffParams("easy");
 }
 
 /* =========================
-   DIFFICULTY
+   Canvas setup
 ========================= */
-function getDifficultyOptions(survives){
-  const base = [
-    {key:"easy",label:"Easy",unlocked:true},
-    {key:"medium",label:"Medium",unlocked:survives>=5},
-    {key:"hard",label:"Hard",unlocked:survives>=10},
-  ];
-  if(EVENT.christmas){
-    base.push({key:"santa",label:"Santa 🎄 (Limited)",unlocked:true});
-  }
-  return base;
-}
-function diffParams(k){
-  if(k==="easy")   return { empCount:3, empSpeed:78,  drainH:0.18, drainT:0.26, dmg:25, vis:230, atkCool:46 };
-  if(k==="medium") return { empCount:5, empSpeed:92,  drainH:0.23, drainT:0.32, dmg:30, vis:260, atkCool:44 };
-  if(k==="hard")   return { empCount:7, empSpeed:108, drainH:0.30, drainT:0.40, dmg:35, vis:290, atkCool:42 };
-  return              { empCount:6, empSpeed:98,  drainH:0.26, drainT:0.34, dmg:30, vis:270, atkCool:44 };
-}
-const diffLabel=k=>{
-  if(k==="easy") return "Easy";
-  if(k==="medium") return "Medium";
-  if(k==="hard") return "Hard";
-  return "Santa 🎄";
-};
-
-/* =========================
-   CANVAS + PIXEL BUFFER
-========================= */
-const canvas=document.getElementById("c");
-const ctx=canvas.getContext("2d",{alpha:false});
-const buf=document.createElement("canvas");
-const bctx=buf.getContext("2d",{alpha:false});
+const canvas=$("game");
+const ctx=canvas.getContext("2d", { alpha:false });
 function resize(){
-  canvas.width=innerWidth; canvas.height=innerHeight;
-  const scaleDown=4;
-  buf.width=Math.max(240,Math.floor(canvas.width/scaleDown));
-  buf.height=Math.max(180,Math.floor(canvas.height/scaleDown));
-  ctx.imageSmoothingEnabled=false;
-  bctx.imageSmoothingEnabled=false;
+  canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
+  canvas.height= Math.floor(window.innerHeight * devicePixelRatio);
 }
-addEventListener("resize",resize);
+window.addEventListener("resize", resize, {passive:true});
 resize();
 
 /* =========================
-   MALL MAP
+   Map generation (pixel mall)
+   We generate tiles + props.
 ========================= */
-const TILE=16;
-const MAP_W=80, MAP_H=60;
-let map=new Array(MAP_W*MAP_H).fill(1);
-const idx=(x,y)=>y*MAP_W+x;
-const inMap=(x,y)=>x>=0&&y>=0&&x<MAP_W&&y<MAP_H;
+const T={
+  FLOOR:0, CARPET:1, WALL:2, GLASS:3, DOOR:4, SHOP:5, KIOSK:6, PLANT:7, LOCKER:8, TREE:9, TABLE:10
+};
 
-function setRect(x,y,w,h,val){ for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++) if(inMap(i,j)) map[idx(i,j)]=val; }
-function carveHall(x,y,w,h,t=0){ setRect(x,y,w,h,t); }
-function storeBlock(x,y,w,h,doorSide,floorType=4){
-  setRect(x,y,w,h,1);
-  setRect(x+1,y+1,w-2,h-2,floorType);
-  if(doorSide==="bottom"){ for(let i=x+1;i<x+w-1;i++) map[idx(i,y+h-1)]=2; map[idx(x+Math.floor(w/2), y+h-1)]=0; }
-  if(doorSide==="top"){ for(let i=x+1;i<x+w-1;i++) map[idx(i,y)]=2; map[idx(x+Math.floor(w/2), y)]=0; }
-  if(doorSide==="left"){ for(let j=y+1;j<y+h-1;j++) map[idx(x,j)]=2; map[idx(x, y+Math.floor(h/2))]=0; }
-  if(doorSide==="right"){ for(let j=y+1;j<y+h-1;j++) map[idx(x+w-1,j)]=2; map[idx(x+w-1, y+Math.floor(h/2))]=0; }
+const tile = new Uint8Array(WORLD_W*WORLD_H);
+const solid = new Uint8Array(WORLD_W*WORLD_H); // 1 if blocks movement
+const hideSpot = new Uint8Array(WORLD_W*WORLD_H); // 1 if can hide here
+const items = []; // pickups
+
+function idx(x,y){ return y*WORLD_W + x; }
+function inb(x,y){ return x>=0 && y>=0 && x<WORLD_W && y<WORLD_H; }
+
+function fillRect(x0,y0,w,h, val, sol=0){
+  for(let y=y0;y<y0+h;y++){
+    for(let x=x0;x<x0+w;x++){
+      if(!inb(x,y)) continue;
+      tile[idx(x,y)] = val;
+      if(sol) solid[idx(x,y)] = 1;
+    }
+  }
 }
-let meetSantaArea=null;
+function outlineRect(x0,y0,w,h,val,sol=1){
+  for(let x=x0;x<x0+w;x++){
+    if(inb(x,y0)){ tile[idx(x,y0)]=val; if(sol) solid[idx(x,y0)]=1; }
+    if(inb(x,y0+h-1)){ tile[idx(x,y0+h-1)]=val; if(sol) solid[idx(x,y0+h-1)]=1; }
+  }
+  for(let y=y0;y<y0+h;y++){
+    if(inb(x0,y)){ tile[idx(x0,y)]=val; if(sol) solid[idx(x0,y)]=1; }
+    if(inb(x0+w-1,y)){ tile[idx(x0+w-1,y)]=val; if(sol) solid[idx(x0+w-1,y)]=1; }
+  }
+}
+function placeProp(x,y, t, canHide=false){
+  if(!inb(x,y)) return;
+  tile[idx(x,y)] = t;
+  solid[idx(x,y)] = 1;
+  if(canHide) hideSpot[idx(x,y)] = 1;
+}
+function rand(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
 
-function generateMall(){
-  map.fill(1);
-  setRect(2,2, MAP_W-4, MAP_H-4, 0);
-
-  carveHall(6,6, MAP_W-12, 6, 0);
-  carveHall(6,MAP_H-12, MAP_W-12, 6, 0);
-  carveHall(6,12, 6, MAP_H-24, 0);
-  carveHall(MAP_W-12,12, 6, MAP_H-24, 0);
-  carveHall(22,18, MAP_W-44, MAP_H-36, 3);
-
-  for(let sx=14; sx<MAP_W-20; sx+=12) storeBlock(sx,3,10,8,"bottom",4);
-  for(let sx=14; sx<MAP_W-20; sx+=12) storeBlock(sx,MAP_H-11,10,8,"top",4);
-  for(let sy=16; sy<MAP_H-20; sy+=11) storeBlock(3,sy,8,9,"right",4);
-  for(let sy=16; sy<MAP_H-20; sy+=11) storeBlock(MAP_W-11,sy,8,9,"left",4);
-
-  const cx = Math.floor(MAP_W/2);
-  const cy = Math.floor(MAP_H/2);
-  const w = 16, h = 12;
-  const x0 = cx - Math.floor(w/2);
-  const y0 = cy - Math.floor(h/2);
-  setRect(x0, y0, w, h, EVENT.christmas ? 5 : 3);
-  setRect(x0+2, y0+2, w-4, h-4, 3);
-  for(let x=x0; x<x0+w; x++){ map[idx(x, y0)] = 1; map[idx(x, y0+h-1)] = 1; }
-  for(let y=y0; y<y0+h; y++){ map[idx(x0, y)] = 1; map[idx(x0+w-1, y)] = 1; }
-  map[idx(cx, y0)] = 0;
-  map[idx(cx, y0+h-1)] = 0;
-  meetSantaArea = { cx:cx*TILE+TILE/2, cy:cy*TILE+TILE/2, w:w*TILE, h:h*TILE };
+function spawnItem(x,y, kind){
+  items.push({x,y,kind, taken:false});
 }
 
-function blocksMove(t){ return t===1 || t===2; }
-function circleHitsWalls(x,y,r){
-  const minTx=Math.floor((x-r)/TILE), maxTx=Math.floor((x+r)/TILE);
-  const minTy=Math.floor((y-r)/TILE), maxTy=Math.floor((y+r)/TILE);
-  for(let ty=minTy; ty<=maxTy; ty++){
-    for(let tx=minTx; tx<=maxTx; tx++){
-      if(!inMap(tx,ty)) return true;
-      const t = map[idx(tx,ty)];
-      if(!blocksMove(t)) continue;
-      const rx=tx*TILE, ry=ty*TILE;
-      const cx=Math.max(rx, Math.min(x, rx+TILE));
-      const cy=Math.max(ry, Math.min(y, ry+TILE));
-      if((x-cx)*(x-cx)+(y-cy)*(y-cy) < r*r) return true;
+function buildMall(){
+  // Base floors
+  fillRect(0,0,WORLD_W,WORLD_H, T.FLOOR, 0);
+
+  // Outer walls
+  outlineRect(0,0,WORLD_W,WORLD_H, T.WALL, 1);
+
+  // Main corridors
+  // Horizontal concourse
+  fillRect(10, 35, 100, 10, T.CARPET, 0);
+  // Vertical concourse
+  fillRect(55, 10, 10, 60, T.CARPET, 0);
+
+  // Center atrium (Meet Santa area)
+  fillRect(45, 28, 30, 24, T.CARPET, 0);
+
+  // Shops (rectangles)
+  const shops = [
+    {x:6,y:6,w:22,h:18},
+    {x:34,y:6,w:18,h:18},
+    {x:70,y:6,w:22,h:18},
+    {x:96,y:6,w:18,h:18},
+
+    {x:6,y:52,w:22,h:22},
+    {x:34,y:56,w:18,h:18},
+    {x:70,y:56,w:22,h:18},
+    {x:96,y:52,w:18,h:22},
+  ];
+  for(const s of shops){
+    // interior floor a bit different
+    fillRect(s.x+1,s.y+1,s.w-2,s.h-2, T.SHOP, 0);
+    outlineRect(s.x,s.y,s.w,s.h, T.WALL, 1);
+    // door opening into concourse (remove a wall tile)
+    const doorX = s.x + Math.floor(s.w/2);
+    const doorY = (s.y < 30) ? (s.y+s.h-1) : (s.y);
+    if(inb(doorX,doorY)){
+      tile[idx(doorX,doorY)] = T.DOOR;
+      solid[idx(doorX,doorY)] = 0;
+      // glass around door for style
+      if(inb(doorX-1,doorY)){ tile[idx(doorX-1,doorY)] = T.GLASS; solid[idx(doorX-1,doorY)] = 1; }
+      if(inb(doorX+1,doorY)){ tile[idx(doorX+1,doorY)] = T.GLASS; solid[idx(doorX+1,doorY)] = 1; }
+    }
+
+    // props inside shops: shelves (lockers style), plants
+    for(let i=0;i<rand(2,4);i++){
+      placeProp(rand(s.x+2,s.x+s.w-3), rand(s.y+2,s.y+s.h-3), T.LOCKER, true);
+    }
+    for(let i=0;i<rand(1,3);i++){
+      placeProp(rand(s.x+2,s.x+s.w-3), rand(s.y+2,s.y+s.h-3), T.PLANT, true);
+    }
+  }
+
+  // Kiosks in concourse (hide spots)
+  for(const k of [
+    {x:30,y:37},{x:40,y:40},{x:78,y:38},{x:86,y:42},
+    {x:58,y:22},{x:60,y:58}
+  ]){
+    placeProp(k.x,k.y, T.KIOSK, true);
+    // little table next to it
+    if(inb(k.x+1,k.y)) placeProp(k.x+1,k.y, T.TABLE, false);
+  }
+
+  // Decorations (trees) around atrium
+  for(const p of [
+    {x:46,y:29},{x:72,y:29},{x:46,y:50},{x:72,y:50},
+    {x:56,y:28},{x:62,y:28},{x:56,y:51},{x:62,y:51}
+  ]) placeProp(p.x,p.y, T.TREE, true);
+
+  // Lockers / plants in hallways
+  for(let i=0;i<20;i++){
+    placeProp(rand(12,108), rand(12,68), (Math.random()<0.5?T.PLANT:T.LOCKER), true);
+  }
+
+  // Spawn items (food/drink) around the map
+  const foods=["chips","burger","cookie","pizza","sandwich"];
+  const drinks=["water","juice","milk","soda","sports"];
+  for(let i=0;i<28;i++){
+    spawnItem(rand(8,112), rand(8,72), {type:"food", name:foods[rand(0,foods.length-1)]});
+  }
+  for(let i=0;i<24;i++){
+    spawnItem(rand(8,112), rand(8,72), {type:"drink", name:drinks[rand(0,drinks.length-1)]});
+  }
+
+  // Cookies + milk in center atrium (Christmas)
+  for(let i=0;i<8;i++) spawnItem(rand(50,70), rand(32,48), {type:"food", name:"cookie"});
+  for(let i=0;i<5;i++) spawnItem(rand(50,70), rand(32,48), {type:"drink", name:"milk"});
+
+  // Ornaments (Santa difficulty)
+  for(let i=0;i<5;i++){
+    spawnItem(rand(10,110), rand(10,70), {type:"ornament", name:"ornament"});
+  }
+
+  // Player start store (near top-left shop)
+  // We'll start in shop1 interior area
+}
+buildMall();
+
+/* =========================
+   Player / Inventory
+========================= */
+const player = {
+  x: 14, y: 14,
+  vx:0, vy:0,
+  speed: 1.15,
+  health: 100,
+  hunger: 100,
+  thirst: 100,
+  stamina: 100,
+  hidden: false,
+  hideCooldown: 0,
+  damageCooldown: 0,
+  ornaments: 0
+};
+
+const inv = {
+  slots: [
+    {key:"food", label:"Food", items:{}},
+    {key:"drink", label:"Drink", items:{}},
+    {key:"misc", label:"Misc", items:{}},
+  ]
+};
+
+function invAdd(kind){
+  // kind: {type, name}
+  let slot = inv.slots[2];
+  if(kind.type==="food") slot=inv.slots[0];
+  if(kind.type==="drink") slot=inv.slots[1];
+  if(kind.type==="ornament") slot=inv.slots[2];
+
+  slot.items[kind.name] = (slot.items[kind.name]||0)+1;
+  toast(`Picked up ${kind.name}!`);
+  renderInv();
+}
+
+function invUse(slotIndex){
+  const slot=inv.slots[slotIndex];
+  const names=Object.keys(slot.items);
+  if(!names.length) return toast("Empty.");
+  const name = names[0]; // simplest: uses first item
+  slot.items[name]--;
+  if(slot.items[name]<=0) delete slot.items[name];
+
+  // Effects
+  if(slot.key==="food"){
+    const hungerGain = (name==="cookie") ? 12 : 18;
+    player.hunger = clamp(player.hunger + hungerGain, 0, 100);
+    player.health = clamp(player.health + 2, 0, 100);
+    toast(`Ate ${name} (+hunger)`);
+  }else if(slot.key==="drink"){
+    const thirstGain = (name==="water")?26 : (name==="milk"?22 : 18);
+    player.thirst = clamp(player.thirst + thirstGain, 0, 100);
+    // stamina except soda
+    if(name!=="soda"){
+      player.stamina = clamp(player.stamina + 18, 0, 100);
+      toast(`Drank ${name} (+thirst +stamina)`);
+    }else{
+      toast(`Drank soda (+thirst)`);
+    }
+  }else{
+    if(name==="ornament"){
+      player.ornaments = clamp(player.ornaments + 1, 0, 5);
+      toast(`Ornament found! (${player.ornaments}/5)`);
+    }else{
+      toast(`Used ${name}`);
+    }
+  }
+
+  renderInv();
+}
+
+/* Inventory UI */
+function renderInv(){
+  const tray=$("invTray");
+  tray.innerHTML="";
+  inv.slots.forEach((s,i)=>{
+    const names=Object.keys(s.items);
+    const top = names[0] || s.label;
+    const qty = names.length ? ("x"+s.items[top]) : "—";
+    const el=document.createElement("div");
+    el.className="slot";
+    el.innerHTML = `<div class="slotName">${esc(top)}</div><div class="slotQty">${esc(qty)}</div>`;
+    el.addEventListener("pointerdown", (e)=>{
+      e.preventDefault();
+      if(!game.playing) return;
+      invUse(i);
+    });
+    tray.appendChild(el);
+  });
+}
+
+/* =========================
+   Enemies (employees)
+========================= */
+function makeEnemy(x,y, variant){
+  return {
+    x,y,
+    vx:0, vy:0,
+    mode:"patrol", // patrol/chase
+    tx:x, ty:y,
+    spotTimer:0,
+    hitCooldown:0,
+    variant
+  };
+}
+let enemies=[];
+
+/* =========================
+   Game state
+========================= */
+const game = {
+  playing:false,
+  paused:false,
+  inMenu:true,
+  difficultyKey:"easy",
+  params: diffParams("easy"),
+  inGameMinute: 0,
+  lastTick: performance.now(),
+  playSecondsThisRun: 0,
+  multiplayer:false,
+  // Multiplayer runtime
+  mp: {
+    enabled:false,
+    roomId:null,
+    isHost:false,
+    hostId:null,
+    playerId: localStorage.getItem("ltm_pid") || ("p_" + crypto.getRandomValues(new Uint32Array(4)).join("_")),
+    roomsUnsub:null,
+    roomUnsub:null,
+    otherPlayers:{}
+  }
+};
+localStorage.setItem("ltm_pid", game.mp.playerId);
+
+/* =========================
+   UI screen switching
+========================= */
+function showScreen(id){
+  // Hide all overlay screens, then show one
+  ["menuScreen","howScreen","statsScreen","pauseScreen","multiScreen","lobbyScreen"].forEach(s=>$(s).classList.remove("show"));
+  if(id) $(id).classList.add("show");
+}
+function refreshMenuLocks(){
+  // Name
+  $("nameInput").value = SAVE.name;
+
+  // Unlocks
+  const diffSel=$("diffSelect");
+  const med=diffSel.querySelector('option[value="medium"]');
+  const hard=diffSel.querySelector('option[value="hard"]');
+  med.disabled = !SAVE.unlocks.medium;
+  hard.disabled = !SAVE.unlocks.hard;
+
+  // Keep selection safe
+  if(diffSel.value==="medium" && med.disabled) diffSel.value="easy";
+  if(diffSel.value==="hard" && hard.disabled) diffSel.value="easy";
+}
+refreshMenuLocks();
+
+/* =========================
+   Time formatting
+========================= */
+function formatTimeFromMinutes(m){
+  // m = minutes since 12:00 AM
+  const total = m % (24*60);
+  let h = Math.floor(total/60);
+  const min = total%60;
+  const am = h<12;
+  let hh = h%12; if(hh===0) hh=12;
+  return `${hh}:${String(min).padStart(2,"0")} ${am?"AM":"PM"}`;
+}
+
+/* =========================
+   Controls (keyboard + mobile)
+========================= */
+const keys = {up:false,down:false,left:false,right:false};
+let sprintHeld=false;
+
+function bindPad(){
+  document.querySelectorAll(".padBtn").forEach(btn=>{
+    const k=btn.getAttribute("data-key");
+    if(!k) return;
+    const down = (e)=>{
+      e.preventDefault();
+      keys[k]=true;
+    };
+    const up = (e)=>{
+      e.preventDefault();
+      keys[k]=false;
+    };
+    btn.addEventListener("pointerdown", down);
+    btn.addEventListener("pointerup", up);
+    btn.addEventListener("pointercancel", up);
+    btn.addEventListener("pointerleave", up);
+  });
+
+  // Hold-to-sprint (fixes your issue)
+  const sBtn=$("sprintHoldBtn");
+  const sDown=(e)=>{ e.preventDefault(); sprintHeld=true; sBtn.textContent="SPRINTING..."; };
+  const sUp=(e)=>{ e.preventDefault(); sprintHeld=false; sBtn.textContent="HOLD TO SPRINT"; };
+  sBtn.addEventListener("pointerdown", sDown);
+  sBtn.addEventListener("pointerup", sUp);
+  sBtn.addEventListener("pointercancel", sUp);
+  sBtn.addEventListener("pointerleave", sUp);
+
+  $("hideBtn").addEventListener("pointerdown",(e)=>{ e.preventDefault(); if(game.playing) toggleHide(); });
+  $("useBtn").addEventListener("pointerdown",(e)=>{ e.preventDefault(); if(game.playing) pickupOrInteract(); });
+  $("pauseBtn").addEventListener("pointerdown",(e)=>{ e.preventDefault(); if(game.playing) openPause(); });
+}
+bindPad();
+
+window.addEventListener("keydown",(e)=>{
+  if(e.key==="ArrowUp"||e.key==="w") keys.up=true;
+  if(e.key==="ArrowDown"||e.key==="s") keys.down=true;
+  if(e.key==="ArrowLeft"||e.key==="a") keys.left=true;
+  if(e.key==="ArrowRight"||e.key==="d") keys.right=true;
+  if(e.key==="Shift") sprintHeld=true;
+  if(e.key===" ") { if(game.playing) pickupOrInteract(); }
+  if(e.key==="Escape") { if(game.playing) openPause(); }
+},{passive:false});
+window.addEventListener("keyup",(e)=>{
+  if(e.key==="ArrowUp"||e.key==="w") keys.up=false;
+  if(e.key==="ArrowDown"||e.key==="s") keys.down=false;
+  if(e.key==="ArrowLeft"||e.key==="a") keys.left=false;
+  if(e.key==="ArrowRight"||e.key==="d") keys.right=false;
+  if(e.key==="Shift") sprintHeld=false;
+},{passive:false});
+
+/* =========================
+   Hiding
+========================= */
+function canHideHere(){
+  const tx=Math.round(player.x), ty=Math.round(player.y);
+  if(!inb(tx,ty)) return false;
+  // Can hide if near a hide spot tile (within 1 tile)
+  for(let oy=-1;oy<=1;oy++){
+    for(let ox=-1;ox<=1;ox++){
+      const nx=tx+ox, ny=ty+oy;
+      if(inb(nx,ny) && hideSpot[idx(nx,ny)]) return true;
     }
   }
   return false;
 }
-function moveWithCollision(ent,nx,ny,r){
-  const ox=ent.x, oy=ent.y;
-  ent.x=nx; if(circleHitsWalls(ent.x,ent.y,r)) ent.x=ox;
-  ent.y=ny; if(circleHitsWalls(ent.x,ent.y,r)) ent.y=oy;
-}
-function randomFloorSpot(){
-  for(let tries=0; tries<5000; tries++){
-    const tx=3+Math.floor(Math.random()*(MAP_W-6));
-    const ty=3+Math.floor(Math.random()*(MAP_H-6));
-    const t=map[idx(tx,ty)];
-    if(t===0 || t===3 || t===4 || t===5){
-      const x=tx*TILE+TILE/2, y=ty*TILE+TILE/2;
-      if(!circleHitsWalls(x,y,6)) return {x,y};
-    }
+
+function toggleHide(){
+  if(player.hideCooldown>0) return;
+  if(player.hidden){
+    player.hidden=false;
+    player.hideCooldown=0.35;
+    toast("Unhid.");
+    return;
   }
-  return {x:8*TILE,y:8*TILE};
+  if(!canHideHere()) return toast("No hiding spot nearby.");
+  player.hidden=true;
+  player.hideCooldown=0.35;
+  toast("Hidden.");
 }
 
 /* =========================
-   GAME STATE
+   Pickup / Interact
 ========================= */
-let profile=loadProfile();
-let stats=loadStats();
-const nameInput=document.getElementById("nameInput");
-nameInput.value=profile.name;
-nameInput.addEventListener("change",()=>{
-  let v=nameInput.value.trim();
-  if(!v) v="Player"+rand4();
-  profile.name=v.slice(0,16);
-  nameInput.value=profile.name;
-  saveProfile(profile);
-});
+function pickupOrInteract(){
+  // Pickup any item in 1 tile radius
+  const px=Math.round(player.x), py=Math.round(player.y);
+  let picked=false;
 
-let game={
-  playing:false,
-  hidden:false,
-  inHideSpot:false,
-  sprint:false,
-  invOpen:false,
+  for(const it of items){
+    if(it.taken) continue;
+    const d = Math.abs(it.x-px)+Math.abs(it.y-py);
+    if(d<=1){
+      it.taken=true;
+      invAdd(it.kind);
+      picked=true;
+      // Multiplayer: if in MP, host can broadcast pickups (simple version here is local only)
+      if(game.multiplayer){
+        mpMarkPickupTaken(it);
+      }
+      break;
+    }
+  }
 
-  timeSeconds:0,
-  gameSecondsPerTick:60,
-  winAtSeconds:8*3600,
+  if(!picked){
+    // If Santa difficulty and you have ornaments in misc slot, allow "use" to count them
+    // (Ornaments also count automatically if you use the misc slot)
+    toast("Nothing to pick up.");
+  }
+}
 
-  tickPlaySec:0,
-  difficultyKey:"easy",
-  params:diffParams("easy"),
+/* =========================
+   Start / End run
+========================= */
+function resetRun(difficultyKey){
+  game.params = diffParams(difficultyKey);
+  game.difficultyKey = difficultyKey;
+  game.inGameMinute = DAY_START_MIN;
+  game.playSecondsThisRun=0;
 
-  ornamentsFound:0,
-  ornamentsNeeded:5,
+  // Start position (store)
+  player.x=14; player.y=14;
+  player.vx=0; player.vy=0;
+  player.health=100; player.hunger=100; player.thirst=100; player.stamina=100;
+  player.hidden=false; player.hideCooldown=0; player.damageCooldown=0;
+  player.ornaments=0;
 
-  mode:"solo",
-  serverId:null,
-  isHost:false
+  // Reset items taken
+  for(const it of items) it.taken=false;
+
+  // Enemies
+  enemies=[];
+  const p=game.params;
+  for(let i=0;i<p.enemyCount;i++){
+    enemies.push(makeEnemy(rand(20,100), rand(20,65), i%3));
+  }
+
+  renderInv();
+  updateHud();
+}
+
+function winRun(){
+  game.playing=false;
+  game.paused=false;
+  SAVE.survivedTotal++;
+  SAVE.survivedStreak++;
+  SAVE.bestStreak = Math.max(SAVE.bestStreak, SAVE.survivedStreak);
+  if(SAVE.survivedTotal>=5) SAVE.unlocks.medium=true;
+  if(SAVE.survivedTotal>=10) SAVE.unlocks.hard=true;
+  saveNow();
+  toast("You survived!");
+  setTimeout(()=>{
+    showMenu();
+  }, 700);
+}
+
+function loseRun(){
+  game.playing=false;
+  game.paused=false;
+  SAVE.survivedStreak=0;
+  saveNow();
+  toast("You got caught...");
+  setTimeout(()=>{
+    showMenu();
+  }, 700);
+}
+
+function showMenu(){
+  game.inMenu=true;
+  game.playing=false;
+  game.paused=false;
+  $("mpLeaveBtn").style.display = "none";
+  showScreen("menuScreen");
+  refreshMenuLocks();
+}
+
+function startSolo(){
+  game.multiplayer=false;
+  game.mp.enabled=false;
+  const diff=$("diffSelect").value;
+  SAVE.lastDifficulty=diff;
+  saveNow();
+  resetRun(diff);
+  game.playing=true;
+  game.inMenu=false;
+  showScreen(null);
+  toast("Survive till 8:00 AM!");
+}
+
+function startFromRoom(diffKey){
+  game.multiplayer=true;
+  game.mp.enabled=true;
+  resetRun(diffKey);
+  game.playing=true;
+  game.inMenu=false;
+  showScreen(null);
+  toast("Multiplayer started!");
+}
+
+function openPause(){
+  game.paused=true;
+  $("pauseInfo").innerHTML = `
+    <b>${esc(SAVE.name)}</b><br>
+    Time: ${esc(formatTimeFromMinutes(game.inGameMinute))}<br>
+    Difficulty: ${esc(game.difficultyKey)}
+  `;
+  $("mpLeaveBtn").style.display = game.multiplayer ? "inline-block" : "none";
+  showScreen("pauseScreen");
+}
+
+/* =========================
+   HUD update
+========================= */
+function setBar(fillEl, txtEl, v){
+  v=clamp(v,0,100);
+  txtEl.textContent = Math.round(v);
+  fillEl.style.width = `${v}%`;
+}
+function updateHud(){
+  $("timeText").textContent = formatTimeFromMinutes(game.inGameMinute);
+  const d=game.difficultyKey;
+  $("diffBadge").textContent = (d==="santa" ? "🎅 Santa" : d[0].toUpperCase()+d.slice(1));
+  $("diffBadge").className = "badge " + (d==="hard" ? "bad" : d==="medium" ? "warn" : "good");
+
+  setBar($("hpFill"), $("hpText"), player.health);
+  setBar($("hunFill"), $("hunText"), player.hunger);
+  setBar($("thrFill"), $("thrText"), player.thirst);
+  setBar($("staFill"), $("staText"), player.stamina);
+
+  if(game.difficultyKey==="santa"){
+    $("goalText").textContent = `🎅 Find 5 ornaments (${player.ornaments}/5) OR survive to 8:00 AM`;
+  }else{
+    $("goalText").textContent = `Survive until 8:00 AM • 1 sec = 1 in-game minute`;
+  }
+}
+
+/* =========================
+   Movement + collisions
+========================= */
+function isSolidAt(x,y){
+  const tx=Math.floor(x), ty=Math.floor(y);
+  if(!inb(tx,ty)) return true;
+  return solid[idx(tx,ty)]===1;
+}
+function moveWithCollision(nx,ny){
+  // Simple AABB-ish per-tile collision
+  const r=0.22;
+  // X
+  let x=player.x, y=player.y;
+  if(!isSolidAt(nx+r,y) && !isSolidAt(nx-r,y)) x=nx;
+  // Y
+  if(!isSolidAt(x,ny+r) && !isSolidAt(x,ny-r)) y=ny;
+  player.x=x; player.y=y;
+}
+
+/* =========================
+   Enemy logic
+========================= */
+function dist(a,b,c,d){
+  const dx=a-c, dy=b-d;
+  return Math.hypot(dx,dy);
+}
+function enemyCanSee(e){
+  if(player.hidden) return false;
+  const d=dist(e.x,e.y,player.x,player.y);
+  if(d>game.params.enemySight) return false;
+
+  // simple line check: sample along line for walls
+  const steps = Math.ceil(d*4);
+  for(let i=1;i<steps;i++){
+    const t=i/steps;
+    const sx=lerp(e.x,player.x,t);
+    const sy=lerp(e.y,player.y,t);
+    if(isSolidAt(sx,sy)) return false;
+  }
+  return true;
+}
+
+function enemyPickPatrolTarget(e){
+  // Patrol around mall corridors
+  e.tx = clamp(Math.floor(e.x) + rand(-10,10), 6, WORLD_W-7);
+  e.ty = clamp(Math.floor(e.y) + rand(-8,8), 6, WORLD_H-7);
+}
+
+function enemyStep(e, dt){
+  if(e.hitCooldown>0) e.hitCooldown-=dt;
+
+  const speed = game.params.enemySpeed;
+
+  const sees = enemyCanSee(e);
+  if(sees){
+    e.mode="chase";
+    e.spotTimer = 0.65; // keep chasing briefly
+  }else{
+    e.spotTimer = Math.max(0, e.spotTimer - dt);
+    if(e.spotTimer<=0) e.mode="patrol";
+  }
+
+  let tx=e.tx, ty=e.ty;
+  if(e.mode==="chase"){
+    tx = player.x;
+    ty = player.y;
+  }else{
+    if(dist(e.x,e.y,e.tx,e.ty)<0.8) enemyPickPatrolTarget(e);
+  }
+
+  const dx=tx-e.x, dy=ty-e.y;
+  const d=Math.hypot(dx,dy)||1;
+  const vx = (dx/d)*speed;
+  const vy = (dy/d)*speed;
+
+  // Move with collision
+  const nx=e.x + vx*dt*3.2;
+  const ny=e.y + vy*dt*3.2;
+
+  // Enemies collide with walls
+  if(!isSolidAt(nx, e.y)) e.x=nx;
+  if(!isSolidAt(e.x, ny)) e.y=ny;
+
+  // Hit player
+  const hitD = dist(e.x,e.y,player.x,player.y);
+  if(hitD<0.75 && e.hitCooldown<=0){
+    e.hitCooldown=1.05;
+    if(player.damageCooldown<=0){
+      player.health = clamp(player.health - 30, 0, 100);
+      player.damageCooldown=0.8;
+      toast("Employee hit you! -30 HP");
+      if(player.health<=0) loseRun();
+    }
+  }
+}
+
+/* =========================
+   Drawing (pixel art)
+========================= */
+function drawTile(x,y,t){
+  // x,y in screen pixels already at TILE scale on our internal render grid
+  // We'll draw with pixel-ish blocks.
+  // Colors
+  if(t===T.FLOOR){
+    ctx.fillStyle="#111a2e"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="rgba(255,255,255,.03)"; ctx.fillRect(x+2,y+2,2,2);
+  }else if(t===T.CARPET){
+    ctx.fillStyle="#2b1635"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="rgba(255,210,240,.08)"; ctx.fillRect(x+3,y+3,2,2);
+  }else if(t===T.SHOP){
+    ctx.fillStyle="#132a1d"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="rgba(255,255,255,.04)"; ctx.fillRect(x+2,y+11,3,2);
+  }else if(t===T.WALL){
+    ctx.fillStyle="#3a4a6f"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="rgba(0,0,0,.25)"; ctx.fillRect(x,y,2,TILE);
+    ctx.fillStyle="rgba(255,255,255,.08)"; ctx.fillRect(x+2,y+2,TILE-4,2);
+  }else if(t===T.GLASS){
+    ctx.fillStyle="#6bc7ff"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="rgba(0,0,0,.25)"; ctx.fillRect(x,y,2,TILE);
+    ctx.fillStyle="rgba(255,255,255,.35)"; ctx.fillRect(x+3,y+3,3,3);
+  }else if(t===T.DOOR){
+    ctx.fillStyle="#8b5a2b"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="rgba(0,0,0,.22)"; ctx.fillRect(x+2,y+2,TILE-4,TILE-4);
+    ctx.fillStyle="rgba(255,255,255,.10)"; ctx.fillRect(x+4,y+4,2,2);
+  }else if(t===T.KIOSK){
+    ctx.fillStyle="#c7a66a"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="#7a5a2b"; ctx.fillRect(x+2,y+2,TILE-4,TILE-4);
+    ctx.fillStyle="rgba(255,255,255,.12)"; ctx.fillRect(x+3,y+3,3,3);
+  }else if(t===T.PLANT){
+    ctx.fillStyle="#1b2a18"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="#1f6b34"; ctx.fillRect(x+4,y+4,8,8);
+    ctx.fillStyle="#2fd66b"; ctx.fillRect(x+6,y+3,4,2);
+    ctx.fillStyle="#7b4a2b"; ctx.fillRect(x+7,y+12,2,2);
+  }else if(t===T.LOCKER){
+    ctx.fillStyle="#2f3a55"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="#99a7cc"; ctx.fillRect(x+3,y+2,10,12);
+    ctx.fillStyle="rgba(0,0,0,.22)"; ctx.fillRect(x+8,y+2,1,12);
+    ctx.fillStyle="#2f3a55"; ctx.fillRect(x+5,y+6,2,2);
+    ctx.fillRect(x+10,y+6,2,2);
+  }else if(t===T.TREE){
+    ctx.fillStyle="#2a3b1c"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="#1f7a3a"; ctx.fillRect(x+4,y+2,8,10);
+    ctx.fillStyle="#2fd66b"; ctx.fillRect(x+5,y+3,6,2);
+    ctx.fillStyle="#e64d6a"; ctx.fillRect(x+4,y+7,2,2);
+    ctx.fillStyle="#ffd36b"; ctx.fillRect(x+10,y+6,2,2);
+    ctx.fillStyle="#7b4a2b"; ctx.fillRect(x+7,y+12,2,3);
+  }else if(t===T.TABLE){
+    ctx.fillStyle="#5c3b23"; ctx.fillRect(x,y,TILE,TILE);
+    ctx.fillStyle="#8b5a2b"; ctx.fillRect(x+2,y+2,TILE-4,5);
+    ctx.fillStyle="rgba(0,0,0,.25)"; ctx.fillRect(x+3,y+7,TILE-6,2);
+  }else{
+    ctx.fillStyle="#111a2e"; ctx.fillRect(x,y,TILE,TILE);
+  }
+}
+
+function drawItem(it, sx, sy){
+  const kind=it.kind;
+  // small pixel icons
+  if(kind.type==="food"){
+    // burger/chips etc
+    ctx.fillStyle="rgba(0,0,0,.35)";
+    ctx.fillRect(sx+4,sy+10,8,4);
+    ctx.fillStyle="#ffd36b";
+    ctx.fillRect(sx+5,sy+9,6,2);
+    ctx.fillStyle="#7a2b3b";
+    ctx.fillRect(sx+5,sy+11,6,2);
+  }else if(kind.type==="drink"){
+    ctx.fillStyle="#6bc7ff";
+    ctx.fillRect(sx+6,sy+6,4,8);
+    ctx.fillStyle="rgba(255,255,255,.35)";
+    ctx.fillRect(sx+7,sy+7,1,5);
+    if(kind.name==="soda"){
+      ctx.fillStyle="#ff6b7a";
+      ctx.fillRect(sx+5,sy+5,6,2);
+    }
+  }else if(kind.type==="ornament"){
+    ctx.fillStyle="#ffd36b";
+    ctx.fillRect(sx+7,sy+5,2,2);
+    ctx.fillStyle="#ff6b7a";
+    ctx.fillRect(sx+6,sy+7,4,4);
+    ctx.fillStyle="rgba(255,255,255,.25)";
+    ctx.fillRect(sx+6,sy+7,2,2);
+  }
+}
+
+function drawPlayer(px,py, isOther=false){
+  // px,py are world coords in tiles; we'll transform externally
+  // Pixel art character: body + head + scarf (Christmas)
+  const sx = px, sy = py;
+  const c1 = isOther ? "#67f0a5" : "#7bdcff";
+  const c2 = isOther ? "#1e5640" : "#24365a";
+
+  // shadow
+  ctx.fillStyle="rgba(0,0,0,.35)";
+  ctx.fillRect(sx-6, sy+6, 12, 3);
+
+  // legs
+  ctx.fillStyle=c2;
+  ctx.fillRect(sx-4, sy+2, 3, 5);
+  ctx.fillRect(sx+1, sy+2, 3, 5);
+
+  // body
+  ctx.fillStyle=c1;
+  ctx.fillRect(sx-5, sy-3, 10, 7);
+
+  // scarf
+  ctx.fillStyle="#ff6b7a";
+  ctx.fillRect(sx-5, sy-1, 10, 2);
+  ctx.fillRect(sx+3, sy+1, 2, 4);
+
+  // head
+  ctx.fillStyle="#f2c7a3";
+  ctx.fillRect(sx-4, sy-9, 8, 6);
+
+  // hair/hat
+  ctx.fillStyle="#2b1635";
+  ctx.fillRect(sx-4, sy-9, 8, 2);
+
+  // eyes
+  ctx.fillStyle="rgba(0,0,0,.45)";
+  ctx.fillRect(sx-2, sy-6, 1, 1);
+  ctx.fillRect(sx+1, sy-6, 1, 1);
+
+  // hidden overlay
+  if(!isOther && player.hidden){
+    ctx.fillStyle="rgba(0,0,0,.45)";
+    ctx.fillRect(sx-7, sy-11, 14, 16);
+    ctx.fillStyle="rgba(255,255,255,.12)";
+    ctx.fillRect(sx-6, sy-10, 12, 14);
+  }
+}
+
+function drawEnemy(ex,ey, variant){
+  const sx=ex, sy=ey;
+  // shadow
+  ctx.fillStyle="rgba(0,0,0,.35)";
+  ctx.fillRect(sx-6, sy+6, 12, 3);
+
+  // uniform colors per variant
+  const top = variant===0 ? "#ffd36b" : variant===1 ? "#ff6b7a" : "#6bc7ff";
+  const uni = "#3a4a6f";
+
+  // legs
+  ctx.fillStyle=uni;
+  ctx.fillRect(sx-4, sy+2, 3, 5);
+  ctx.fillRect(sx+1, sy+2, 3, 5);
+
+  // body
+  ctx.fillStyle=top;
+  ctx.fillRect(sx-5, sy-3, 10, 7);
+
+  // head
+  ctx.fillStyle="#e5b895";
+  ctx.fillRect(sx-4, sy-9, 8, 6);
+
+  // hat
+  ctx.fillStyle="#111a2e";
+  ctx.fillRect(sx-4, sy-10, 8, 2);
+
+  // badge
+  ctx.fillStyle="#ffffff";
+  ctx.fillRect(sx+2, sy-1, 2, 2);
+}
+
+/* =========================
+   Camera + rendering
+========================= */
+let cam = {x:0,y:0};
+function render(){
+  // Internal render resolution in tiles then scale to canvas
+  const scale = Math.floor(Math.min(canvas.width/(VIEW_TILES_X*TILE), canvas.height/(VIEW_TILES_Y*TILE)));
+  const rw = VIEW_TILES_X*TILE;
+  const rh = VIEW_TILES_Y*TILE;
+
+  // clear
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.imageSmoothingEnabled=false;
+  ctx.fillStyle="#0b1220";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // compute camera target (center player)
+  const targetX = player.x*TILE - rw/2;
+  const targetY = player.y*TILE - rh/2;
+  cam.x = lerp(cam.x, targetX, 0.14);
+  cam.y = lerp(cam.y, targetY, 0.14);
+
+  // clamp camera to world bounds
+  cam.x = clamp(cam.x, 0, WORLD_W*TILE - rw);
+  cam.y = clamp(cam.y, 0, WORLD_H*TILE - rh);
+
+  // center render
+  const ox = Math.floor((canvas.width - rw*scale)/2);
+  const oy = Math.floor((canvas.height - rh*scale)/2);
+
+  ctx.translate(ox, oy);
+  ctx.scale(scale, scale);
+
+  // draw tiles in view
+  const startTx = Math.floor(cam.x / TILE);
+  const startTy = Math.floor(cam.y / TILE);
+  const endTx = startTx + VIEW_TILES_X + 2;
+  const endTy = startTy + VIEW_TILES_Y + 2;
+
+  for(let ty=startTy; ty<endTy; ty++){
+    for(let tx=startTx; tx<endTx; tx++){
+      if(!inb(tx,ty)) continue;
+      const t = tile[idx(tx,ty)];
+      const sx = tx*TILE - cam.x;
+      const sy = ty*TILE - cam.y;
+      drawTile(sx,sy,t);
+    }
+  }
+
+  // ambiance (not fully dark)
+  // We add a vignette overlay later.
+
+  // draw items
+  for(const it of items){
+    if(it.taken) continue;
+    const sx = it.x*TILE - cam.x;
+    const sy = it.y*TILE - cam.y;
+    drawItem(it, sx, sy);
+  }
+
+  // draw other players (multiplayer)
+  if(game.multiplayer){
+    for(const op of Object.values(game.mp.otherPlayers)){
+      const sx = op.x*TILE - cam.x + 8;
+      const sy = op.y*TILE - cam.y + 8;
+      drawPlayer(sx,sy,true);
+    }
+  }
+
+  // draw enemies
+  for(const e of enemies){
+    const sx = e.x*TILE - cam.x + 8;
+    const sy = e.y*TILE - cam.y + 8;
+    drawEnemy(sx,sy,e.variant);
+  }
+
+  // draw player
+  {
+    const sx = player.x*TILE - cam.x + 8;
+    const sy = player.y*TILE - cam.y + 8;
+    drawPlayer(sx,sy,false);
+  }
+
+  // Vignette + mall light feel
+  ctx.setTransform(1,0,0,1,0,0);
+  const g=ctx.createRadialGradient(canvas.width*0.5, canvas.height*0.5, canvas.width*0.2, canvas.width*0.5, canvas.height*0.55, canvas.width*0.62);
+  g.addColorStop(0,"rgba(0,0,0,0.00)");
+  g.addColorStop(1,"rgba(0,0,0,0.55)");
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Small top glow like mall skylight
+  const g2=ctx.createRadialGradient(canvas.width*0.5, canvas.height*0.12, 10, canvas.width*0.5, canvas.height*0.12, canvas.width*0.65);
+  g2.addColorStop(0,"rgba(255,255,255,0.10)");
+  g2.addColorStop(1,"rgba(255,255,255,0.00)");
+  ctx.fillStyle=g2;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+/* =========================
+   Game loop
+========================= */
+function tick(now){
+  const dt = Math.min(0.05, (now - game.lastTick)/1000);
+  game.lastTick = now;
+
+  // Total playtime stats (only when actually playing)
+  if(game.playing && !game.paused){
+    SAVE.totalPlaySeconds += dt;
+    game.playSecondsThisRun += dt;
+  }
+
+  if(game.playing && !game.paused){
+    // time passes: 1 sec = 1 minute
+    game.inGameMinute += dt * (60/REAL_SEC_PER_INGAME_MIN) / 60; // dt minutes per second -> dt*1min
+    // simpler: dt seconds => dt minutes
+    game.inGameMinute += dt * 1; // 1 in-game minute per real second
+
+    if(game.inGameMinute>=DAY_END_MIN){
+      // win condition OR Santa ornaments
+      winRun();
+    }
+
+    // Drain needs
+    const p=game.params;
+    player.hunger = clamp(player.hunger - p.hungerDrain*dt*10, 0, 100);
+    player.thirst = clamp(player.thirst - p.thirstDrain*dt*10, 0, 100);
+
+    // If starving/dehydrated, lose health slowly
+    if(player.hunger<=0 || player.thirst<=0){
+      player.health = clamp(player.health - 6*dt, 0, 100);
+      if(player.health<=0) loseRun();
+    }
+
+    // stamina
+    const moving = keys.up||keys.down||keys.left||keys.right;
+    const wantSprint = sprintHeld && moving && !player.hidden;
+    const canSprint = player.stamina>2;
+
+    let spd = player.speed;
+    if(wantSprint && canSprint){
+      spd *= 1.55;
+      player.stamina = clamp(player.stamina - p.staminaDrain*dt*18, 0, 100); // slower drain than before
+    }else{
+      // regen when not sprinting
+      const regen = p.staminaRegen*dt*14;
+      player.stamina = clamp(player.stamina + regen, 0, 100);
+    }
+
+    // Move (disable movement when hidden)
+    if(player.hidden){
+      player.vx=0; player.vy=0;
+    }else{
+      let mx=0,my=0;
+      if(keys.left) mx-=1;
+      if(keys.right) mx+=1;
+      if(keys.up) my-=1;
+      if(keys.down) my+=1;
+      const mag=Math.hypot(mx,my) || 1;
+      mx/=mag; my/=mag;
+      player.vx = mx*spd;
+      player.vy = my*spd;
+
+      const nx = player.x + player.vx*dt*3.2;
+      const ny = player.y + player.vy*dt*3.2;
+      moveWithCollision(nx,ny);
+    }
+
+    // cooldowns
+    if(player.hideCooldown>0) player.hideCooldown-=dt;
+    if(player.damageCooldown>0) player.damageCooldown-=dt;
+
+    // enemies
+    for(const e of enemies) enemyStep(e, dt);
+
+    // Santa difficulty win condition (ornaments)
+    if(game.difficultyKey==="santa" && player.ornaments>=5){
+      winRun();
+    }
+
+    // Multiplayer sync
+    if(game.multiplayer){
+      mpTick(dt);
+    }
+
+    updateHud();
+  }
+
+  if(game.playing){
+    render();
+  }
+
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* =========================
+   Buttons (Menu)
+========================= */
+$("playSoloBtn").onclick = ()=> startSolo();
+
+$("howBtn").onclick = ()=>{
+  showScreen("howScreen");
+};
+$("howBackBtn").onclick = ()=> showScreen("menuScreen");
+
+$("statsBtn").onclick = ()=>{
+  const mins = Math.floor(SAVE.totalPlaySeconds/60);
+  const secs = Math.floor(SAVE.totalPlaySeconds%60);
+  $("statsText").innerHTML = `
+    <b>Name:</b> ${esc(SAVE.name)}<br><br>
+    <b>Total play time:</b> ${mins}m ${secs}s<br>
+    <b>Total survives:</b> ${SAVE.survivedTotal}<br>
+    <b>Survives in a row:</b> ${SAVE.survivedStreak}<br>
+    <b>Best streak:</b> ${SAVE.bestStreak}<br><br>
+    <b>Unlocked:</b> Medium = ${SAVE.unlocks.medium?"Yes":"No"} • Hard = ${SAVE.unlocks.hard?"Yes":"No"}
+  `;
+  showScreen("statsScreen");
+};
+$("statsBackBtn").onclick = ()=> showScreen("menuScreen");
+
+$("resetBtn").onclick = ()=>{
+  if(!confirm("Reset your local save?")) return;
+  localStorage.removeItem(SAVE_KEY);
+  SAVE=loadSave();
+  saveNow();
+  toast("Save reset.");
+  showScreen("menuScreen");
 };
 
-let hideAnim={active:false,t:0,dir:0,durClose:0.40,durOpen:0.35};
+$("resumeBtn").onclick = ()=>{
+  game.paused=false;
+  showScreen(null);
+};
+$("quitBtn").onclick = ()=>{
+  game.paused=false;
+  if(game.multiplayer){
+    mpLeaveRoom();
+  }
+  showMenu();
+};
+$("mpLeaveBtn").onclick = ()=>{
+  mpLeaveRoom();
+  showMenu();
+};
 
-let player, employees, foods, drinks, hideSpots;
-let holidayItems, ornaments;
-let inventory;
-let snow=[];
-let cam={x:0,y:0};
-const worldToScreen=(wx,wy)=>({x:wx-cam.x,y:wy-cam.y});
+/* Name save */
+$("nameInput").value = SAVE.name;
+$("nameInput").addEventListener("input", ()=>{
+  SAVE.name = $("nameInput").value.trim() || SAVE.name;
+  saveNow();
+});
 
-function resetInventory(){
-  inventory = {
-    burger:0, chips:0,
-    water:0, juice:0, soda:0,
-    cookie:0, cocoa:0, candy:0, milk:0
-  };
-  renderInventory();
+/* Difficulty select save */
+$("diffSelect").value = SAVE.lastDifficulty || "easy";
+$("diffSelect").addEventListener("change", ()=>{
+  SAVE.lastDifficulty = $("diffSelect").value;
+  saveNow();
+});
+
+/* Pause open by UI button already wired */
+
+renderInv();
+updateHud();
+
+/* =========================================================
+   MULTIPLAYER (WORLDWIDE) — Firebase RTDB
+   - Host creates room code (public list)
+   - Join from list
+   - Lobby players list
+   - Sync player x/y/hp/hidden/ornaments
+   - Host starts when >= 2 players
+========================================================= */
+const MP = game.mp;
+
+function r(p){ return ref(db, p); }
+
+function makeRoomCode(){
+  const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out="";
+  for(let i=0;i<6;i++) out+=chars[Math.floor(Math.random()*chars.length)];
+  return out;
 }
 
-function resetWorld(){
-  generateMall();
-  const sp=randomFloorSpot();
-  player={ x:sp.x,y:sp.y,r:6,face:1, health:100,hunger:100,thirst:100,stamina:100, speed:76 };
+async function mpCreateRoom(maxPlayers, diffKey){
+  const code = makeRoomCode();
+  MP.roomId = code;
+  MP.isHost = true;
+  MP.otherPlayers = {};
 
-  hideSpots=[
-    {name:"Lockers",x:(16*TILE)+8,y:(6*TILE)+8,r:10},
-    {name:"Storage",x:((MAP_W-20)*TILE)+8,y:(16*TILE)+8,r:10},
-    {name:"Backroom",x:(14*TILE)+8,y:((MAP_H-12)*TILE)+8,r:11},
-  ];
+  // Room core
+  await set(r(`rooms/${code}`), {
+    hostId: MP.playerId,
+    hostName: SAVE.name,
+    maxPlayers,
+    diffKey,
+    started:false,
+    createdAt: serverTimestamp()
+  });
 
-  employees=[];
-  for(let i=0;i<game.params.empCount;i++){
-    const p=randomFloorSpot();
-    employees.push({x:p.x,y:p.y,r:6,face:1,cool:0,wander:Math.random()*Math.PI*2});
-  }
+  // Public listing
+  await set(r(`publicRooms/${code}`), {
+    hostName: SAVE.name,
+    maxPlayers,
+    diffKey,
+    started:false,
+    createdAt: Date.now()
+  });
 
-  foods=[]; drinks=[];
-  for(let i=0;i<9;i++){ const p=randomFloorSpot(); foods.push({x:p.x,y:p.y,taken:false,kind:Math.random()<0.5?"burger":"chips"}); }
-  for(let i=0;i<9;i++){
-    const p=randomFloorSpot(); const soda=Math.random()<0.4;
-    drinks.push({x:p.x,y:p.y,taken:false,kind:soda?"soda":(Math.random()<0.5?"water":"juice")});
-  }
+  // Add host player node
+  await set(r(`rooms/${code}/players/${MP.playerId}`), {
+    id: MP.playerId,
+    name: SAVE.name,
+    x: player.x, y: player.y,
+    hp: player.health,
+    hidden: false,
+    ornaments: 0,
+    joinedAt: serverTimestamp()
+  });
 
-  holidayItems=[];
-  if(EVENT.christmas){
-    for(let i=0;i<7;i++){ const p=randomFloorSpot(); holidayItems.push({x:p.x,y:p.y,taken:false,kind:"cookie"}); }
-    for(let i=0;i<6;i++){ const p=randomFloorSpot(); holidayItems.push({x:p.x,y:p.y,taken:false,kind:"cocoa"}); }
-    for(let i=0;i<6;i++){ const p=randomFloorSpot(); holidayItems.push({x:p.x,y:p.y,taken:false,kind:"candy"}); }
-    if(meetSantaArea){
-      const baseX=meetSantaArea.cx, baseY=meetSantaArea.cy;
-      const drops=[
-        {dx:-40,dy:-10,kind:"cookie"},
-        {dx: 40,dy:-10,kind:"cookie"},
-        {dx:-10,dy: 10,kind:"milk"},
-        {dx: 10,dy: 10,kind:"cocoa"},
-        {dx:  0,dy:-28,kind:"candy"},
-      ];
-      for(const d of drops){
-        holidayItems.push({x:baseX+d.dx,y:baseY+d.dy,taken:false,kind:d.kind});
-      }
-    }
-  }
+  onDisconnect(r(`rooms/${code}/players/${MP.playerId}`)).remove();
+  onDisconnect(r(`publicRooms/${code}`)).remove();
 
-  ornaments=[];
-  game.ornamentsFound=0;
-  if(game.difficultyKey==="santa" && EVENT.christmas){
-    for(let i=0;i<game.ornamentsNeeded;i++){
-      const p=randomFloorSpot();
-      ornaments.push({x:p.x,y:p.y,taken:false});
-    }
-  }
-
-  snow=[];
-  if(EVENT.christmas && EVENT.snowParticles){
-    for(let i=0;i<90;i++){
-      snow.push({x:Math.random()*buf.width,y:Math.random()*buf.height,spd:12+Math.random()*24,sz:1+Math.random()*2});
-    }
-  }
-
-  game.hidden=false;
-  game.inHideSpot=false;
-  game.sprint=false;
-  game.invOpen=false;
-  game.timeSeconds=0;
-  game.tickPlaySec=0;
-
-  hideAnim.active=false; hideAnim.t=0; hideAnim.dir=0;
-  cheer.active=false; cheer.t=0;
-
-  updateSprintButton();
-  resetInventory();
-  closeInventory();
-  updateUI();
+  mpWatchRoom();
+  return code;
 }
 
-function startGame(){
-  document.getElementById("menu").style.display="none";
-  document.getElementById("ui").style.display="block";
-  document.getElementById("controls").style.display="block";
-  game.playing=true;
-  resetWorld();
-  startIntervals();
-  lastFrame=performance.now();
-  requestAnimationFrame(loop);
+async function mpJoinRoom(code){
+  code = code.toUpperCase().trim();
+  const snap = await get(r(`rooms/${code}`));
+  if(!snap.exists()) return toast("Server not found.");
+  const room = snap.val();
+  if(room.started) return toast("Already started.");
+
+  const playersSnap = await get(r(`rooms/${code}/players`));
+  const count = playersSnap.exists() ? Object.keys(playersSnap.val()).length : 0;
+  if(count >= room.maxPlayers) return toast("Server full.");
+
+  MP.roomId = code;
+  MP.isHost = false;
+  MP.otherPlayers = {};
+
+  await set(r(`rooms/${code}/players/${MP.playerId}`), {
+    id: MP.playerId,
+    name: SAVE.name,
+    x: player.x, y: player.y,
+    hp: player.health,
+    hidden: false,
+    ornaments: 0,
+    joinedAt: serverTimestamp()
+  });
+
+  onDisconnect(r(`rooms/${code}/players/${MP.playerId}`)).remove();
+  mpWatchRoom();
 }
 
-/* =========================
-   TIMERS
-========================= */
-let statInterval=null;
-function startIntervals(){
-  stopIntervals();
-  statInterval=setInterval(()=>{
-    if(!game.playing) return;
+function mpWatchPublicRooms(){
+  const list=$("serverList");
+  if(MP.roomsUnsub) MP.roomsUnsub();
 
-    game.tickPlaySec++;
-    stats.totalPlaySeconds++;
+  MP.roomsUnsub = onValue(r("publicRooms"), (snap)=>{
+    const rooms = snap.val() || {};
+    const arr = Object.entries(rooms)
+      .map(([id,v])=>({id,...v}))
+      .filter(v=>!v.started)
+      .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
 
-    game.timeSeconds += game.gameSecondsPerTick;
-
-    if(game.timeSeconds >= game.winAtSeconds){
-      if(game.difficultyKey==="santa"){
-        if(game.ornamentsFound>=game.ornamentsNeeded) winGame();
-        else loseSantaFail();
-      }else{
-        winGame();
-      }
+    if(!arr.length){
+      list.innerHTML = `<div class="muted">No servers right now.</div>`;
       return;
     }
 
-    player.hunger -= game.params.drainH;
-    player.thirst -= game.params.drainT;
-
-    // Regen a bit slower while sprint is ON, faster while walking/resting
-    let regen = game.sprint ? 0.55 : 0.85;
-    if(cheer.active) regen += 0.35;
-    player.stamina = Math.min(100, player.stamina + regen);
-
-    if(cheer.active){
-      cheer.t -= 1;
-      if(cheer.t <= 0){ cheer.active=false; cheer.t=0; }
-    }
-
-    if(player.hunger<=0 || player.thirst<=0) player.health -= 1;
-
-    if(player.health<=0){ player.health=0; loseGame("You passed out…"); return; }
-
-    saveStats(stats);
-    updateUI();
-  },1000);
-}
-function stopIntervals(){ if(statInterval) clearInterval(statInterval); statInterval=null; }
-
-/* =========================
-   UI
-========================= */
-const healthEl=document.getElementById("health");
-const hungerEl=document.getElementById("hunger");
-const thirstEl=document.getElementById("thirst");
-const staminaEl=document.getElementById("stamina");
-const timeEl=document.getElementById("time");
-const diffEl=document.getElementById("diffLabel");
-const hideHintEl=document.getElementById("hideHint");
-const extraHudEl=document.getElementById("extraHud");
-
-function formatGameTime12h(totalSeconds){
-  const h24=Math.floor(totalSeconds/3600);
-  const m=Math.floor((totalSeconds%3600)/60);
-  let h12=h24%12; if(h12===0) h12=12;
-  const ampm=(h24<12)?"AM":"PM";
-  return `${h12}:${String(m).padStart(2,"0")} ${ampm}`;
-}
-function updateUI(){
-  healthEl.textContent=Math.max(0,Math.floor(player?.health??100));
-  hungerEl.textContent=Math.max(0,Math.floor(player?.hunger??100));
-  thirstEl.textContent=Math.max(0,Math.floor(player?.thirst??100));
-  staminaEl.textContent=Math.min(100,Math.max(0,Math.floor(player?.stamina??100)));
-
-  timeEl.textContent=formatGameTime12h(game.timeSeconds);
-  diffEl.textContent="• "+diffLabel(game.difficultyKey);
-
-  if(game.difficultyKey==="santa"){
-    extraHudEl.textContent = `🎄 Ornaments: ${game.ornamentsFound}/${game.ornamentsNeeded}`;
-  }else{
-    extraHudEl.textContent = "";
-  }
-
-  let hint="";
-  if(game.invOpen) hint="Inventory open.";
-  else if(game.inHideSpot && !game.hidden && !hideAnim.active) hint="You can hide here. Press HIDE.";
-  else if(hideAnim.active && hideAnim.dir===1) hint="Hiding...";
-  else if(hideAnim.active && hideAnim.dir===-1) hint="Leaving...";
-  else if(game.hidden) hint="Hidden.";
-  else if(cheer.active) hint=`Cheer buff active (${cheer.t}s)`;
-  else if(game.sprint) hint="Sprinting (hold button)";
-  hideHintEl.textContent=hint;
-}
-
-/* =========================
-   INVENTORY
-========================= */
-const invOverlay=document.getElementById("invOverlay");
-const invGrid=document.getElementById("invGrid");
-const invBtn=document.getElementById("invBtn");
-const invCloseBtn=document.getElementById("invCloseBtn");
-
-function openInventory(){
-  if(!game.playing) return;
-  game.invOpen=true;
-  invOverlay.style.display="flex";
-  renderInventory();
-  updateUI();
-}
-function closeInventory(){
-  game.invOpen=false;
-  invOverlay.style.display="none";
-  updateUI();
-}
-invBtn.onclick=()=>{ if(game.invOpen) closeInventory(); else openInventory(); };
-invCloseBtn.onclick=()=>closeInventory();
-
-const INV_ITEMS = [
-  { key:"burger", name:"Burger", desc:"+Hunger to 100",
-    canUse:()=>inventory.burger>0 && !game.hidden && !hideAnim.active,
-    use:()=>{ inventory.burger--; player.hunger=100; toast("Ate Burger (+Hunger)"); } },
-  { key:"chips", name:"Chips", desc:"+Hunger to 100",
-    canUse:()=>inventory.chips>0 && !game.hidden && !hideAnim.active,
-    use:()=>{ inventory.chips--; player.hunger=100; toast("Ate Chips (+Hunger)"); } },
-  { key:"water", name:"Water", desc:"+Thirst 100 +Stamina 100",
-    canUse:()=>inventory.water>0 && !game.hidden && !hideAnim.active,
-    use:()=>{ inventory.water--; player.thirst=100; player.stamina=100; toast("Drank Water (+Thirst +Stamina)"); } },
-  { key:"juice", name:"Juice", desc:"+Thirst 100 +Stamina 100",
-    canUse:()=>inventory.juice>0 && !game.hidden && !hideAnim.active,
-    use:()=>{ inventory.juice--; player.thirst=100; player.stamina=100; toast("Drank Juice (+Thirst +Stamina)"); } },
-  { key:"soda", name:"Soda", desc:"+Thirst 100 (NO stamina)",
-    canUse:()=>inventory.soda>0 && !game.hidden && !hideAnim.active,
-    use:()=>{ inventory.soda--; player.thirst=100; toast("Drank Soda (+Thirst)"); } },
-  { key:"milk", name:"Milk", desc:"+Thirst 100 +Stamina 100 +Cheer buff",
-    canUse:()=>inventory.milk>0 && !game.hidden && !hideAnim.active,
-    use:()=>{ inventory.milk--; player.thirst=100; player.stamina=100; startCheer(); toast("Drank Milk (+Cheer)"); } },
-  { key:"cookie", name:"Cookie", desc:"+Hunger 100 +Cheer buff",
-    canUse:()=>inventory.cookie>0 && !game.hidden && !hideAnim.active,
-    use:()=>{ inventory.cookie--; player.hunger=100; startCheer(); toast("Ate Cookie (+Cheer)"); } },
-  { key:"cocoa", name:"Hot Cocoa", desc:"+Thirst 100 +Stamina 100 +Cheer buff",
-    canUse:()=>inventory.cocoa>0 && !game.hidden && !hideAnim.active,
-    use:()=>{ inventory.cocoa--; player.thirst=100; player.stamina=100; startCheer(); toast("Drank Cocoa (+Cheer)"); } },
-  { key:"candy", name:"Candy Cane", desc:"+Stamina 100 +Cheer buff",
-    canUse:()=>inventory.candy>0 && !game.hidden && !hideAnim.active,
-    use:()=>{ inventory.candy--; player.stamina=100; startCheer(); toast("Candy Cane (+Cheer)"); } },
-];
-
-function renderInventory(){
-  invGrid.innerHTML = INV_ITEMS.map(item=>{
-    const count = inventory[item.key]||0;
-    const disabled = !(item.canUse());
-    return `
-      <div class="invItem">
-        <div class="left">
-          <div class="name">${item.name}</div>
-          <div class="desc">${item.desc}</div>
-          <div class="count">Count: <b>${count}</b></div>
+    list.innerHTML = arr.map(s=>`
+      <div class="serverRow">
+        <div>
+          <div><b>${esc(s.hostName)}’s Server</b></div>
+          <div class="tiny muted">Max ${s.maxPlayers} • ${esc(s.diffKey)}</div>
         </div>
-        <button ${disabled?'disabled':''} onclick="useInv('${item.key}')">USE</button>
+        <button class="btn small" onclick="window.__joinRoom('${s.id}')">Join</button>
       </div>
-    `;
-  }).join("");
-}
-window.useInv=function(key){
-  const item=INV_ITEMS.find(x=>x.key===key);
-  if(!item) return;
-  if(!item.canUse()) return toast("Can't use that right now.");
-  item.use();
-  renderInventory();
-  updateUI();
-};
-
-/* =========================
-   CONTROLS
-========================= */
-const sprintBtn=document.getElementById("sprintBtn");
-const hideBtn=document.getElementById("hideBtn");
-const pauseBtn=document.getElementById("pauseBtn");
-
-/* ---------- HOLD-TO-SPRINT (FIXED FOR iOS) ---------- */
-let sprintPointerId = null;
-
-function updateSprintButton(){
-  sprintBtn.textContent = game.sprint ? "🏃 Sprinting…" : "🏃 Hold to Sprint";
+    `).join("");
+  });
 }
 
-function setSprint(on){
-  game.sprint = !!on;
-  updateSprintButton();
-  updateUI();
-}
+window.__joinRoom = (id)=> mpJoinRoom(id);
 
-// Press = sprint ON
-function sprintDown(e){
-  e.preventDefault();
-  e.stopPropagation();
-  if(!game.playing) return;
-  if(game.invOpen) return toast("Close inventory first.");
-  if(game.hidden || hideAnim.active) return toast("Can't sprint while hiding.");
-  if(player.stamina <= 4) return toast("Too tired to sprint.");
+function mpWatchRoom(){
+  if(MP.roomUnsub) MP.roomUnsub();
 
-  // lock this pointer (prevents weird multi-touch toggles)
-  sprintPointerId = (e.pointerId ?? "touch");
-  setSprint(true);
-}
-
-// Release/cancel = sprint OFF
-function sprintUp(e){
-  if(sprintPointerId===null) return;
-  // if pointerId exists, only end if it's the same finger
-  if(e && e.pointerId!=null && sprintPointerId!=="touch" && e.pointerId!==sprintPointerId) return;
-
-  sprintPointerId = null;
-  setSprint(false);
-}
-
-// Only pointer events (no click/touchstart duplicates)
-sprintBtn.addEventListener("pointerdown", sprintDown, { passive:false });
-sprintBtn.addEventListener("pointerup", sprintUp, { passive:false });
-sprintBtn.addEventListener("pointercancel", sprintUp, { passive:false });
-sprintBtn.addEventListener("pointerleave", sprintUp, { passive:false });
-
-// kill click so it doesn't mess with hold behavior
-sprintBtn.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); });
-/* ---------- END HOLD-TO-SPRINT ---------- */
-
-hideBtn.onclick=()=>{
-  if(!game.playing) return;
-  if(game.invOpen) return toast("Close inventory first.");
-  if(!game.inHideSpot) return toast("Not in a hiding spot.");
-  if(hideAnim.active) return;
-
-  // can't stay sprinting while hiding
-  sprintPointerId=null;
-  setSprint(false);
-
-  if(!game.hidden){
-    hideAnim.active=true; hideAnim.dir=1; hideAnim.t=0; toast("Hiding...");
-  }else{
-    hideAnim.active=true; hideAnim.dir=-1; hideAnim.t=1; toast("Leaving...");
-  }
-};
-
-pauseBtn.onclick=()=>{
-  if(!game.playing) return;
-  game.playing=false;
-  stopIntervals();
-  document.getElementById("ui").style.display="none";
-  document.getElementById("controls").style.display="none";
-  closeInventory();
-  toast("Paused");
-  showPanel("menu");
-  refreshDifficultyUI();
-};
-
-const keys={up:false,down:false,left:false,right:false};
-function bindHold(btn, key){
-  const el=document.getElementById(btn);
-  const on=()=>{ keys[key]=true; };
-  const off=()=>{ keys[key]=false; };
-  el.addEventListener("touchstart",(e)=>{ e.preventDefault(); on(); }, {passive:false});
-  el.addEventListener("touchend",(e)=>{ e.preventDefault(); off(); }, {passive:false});
-  el.addEventListener("touchcancel",(e)=>{ e.preventDefault(); off(); }, {passive:false});
-  el.addEventListener("mousedown",(e)=>{ e.preventDefault(); on(); });
-  addEventListener("mouseup",()=>off());
-}
-bindHold("btnUp","up");
-bindHold("btnDownReal","down");
-bindHold("btnLeft","left");
-bindHold("btnRight","right");
-
-/* =========================
-   END STATES
-========================= */
-function formatTime(sec){ const m=Math.floor(sec/60), s=sec%60; return `${m}m ${s}s`; }
-function winGame(){
-  game.playing=false; stopIntervals(); closeInventory();
-  stats.survives++; saveStats(stats);
-
-  const lb=loadLB();
-  lb.push({name:profile.name,difficulty:game.difficultyKey,seconds:game.tickPlaySec,date:new Date().toISOString()});
-  lb.sort((a,b)=>a.seconds-b.seconds);
-  saveLB(lb.slice(0,20));
-
-  const extra = (game.difficultyKey==="santa") ? `\nOrnaments: ${game.ornamentsFound}/${game.ornamentsNeeded}` : "";
-  alert(`You survived until 8:00 AM!\nReal Time Played: ${formatTime(game.tickPlaySec)}\nDifficulty: ${diffLabel(game.difficultyKey)}${extra}`);
-  location.reload();
-}
-function loseSantaFail(){
-  game.playing=false; stopIntervals(); closeInventory();
-  stats.deaths++; saveStats(stats);
-  alert(`Mall opened at 8:00 AM… but you only found ${game.ornamentsFound}/${game.ornamentsNeeded} ornaments.\nSanta Difficulty FAILED.`);
-  location.reload();
-}
-function loseGame(msg){
-  game.playing=false; stopIntervals(); closeInventory();
-  stats.deaths++; saveStats(stats);
-  alert(msg || "You got caught… Game Over.");
-  location.reload();
-}
-
-/* =========================
-   DRAW HELPERS
-========================= */
-function px(x,y,w,h,c){ bctx.fillStyle=c; bctx.fillRect(x|0,y|0,w|0,h|0); }
-function drawTile(tx,ty,t){
-  const x = tx*TILE - cam.x;
-  const y = ty*TILE - cam.y;
-  if(x<-TILE||y<-TILE||x>buf.width+TILE||y>buf.height+TILE) return;
-
-  if(t===0){
-    px(x,y,TILE,TILE,"#d7e2ee");
-    px(x+1,y+1,TILE-2,TILE-2,"#c6d3e2");
-    px(x+7,y,2,TILE,"#aab7c8");
-    px(x,y+7,TILE,2,"#aab7c8");
-  } else if(t===3){
-    px(x,y,TILE,TILE,"#5a2aa6");
-    px(x+1,y+1,TILE-2,TILE-2,"#7b43c9");
-  } else if(t===4){
-    px(x,y,TILE,TILE,"#d1c8b5");
-    px(x+1,y+1,TILE-2,TILE-2,"#e8e2d2");
-  } else if(t===5){
-    px(x,y,TILE,TILE,"#b51f2e");
-    px(x+1,y+1,TILE-2,TILE-2,"#d13a49");
-    px(x+2,y+2,4,4,"#1a9c55");
-    px(x+10,y+10,4,4,"#1a9c55");
-    px(x+2,y+10,4,4,"#ffe869");
-    px(x+10,y+2,4,4,"#ffe869");
-  } else if(t===2){
-    px(x,y,TILE,TILE,"#434a55");
-    px(x+1,y+1,TILE-2,TILE-2,"rgba(120,184,255,0.55)");
-  } else {
-    px(x,y,TILE,TILE,"#59606a");
-    px(x+1,y+1,TILE-2,TILE-2,"#434a55");
-  }
-}
-function drawDecor(){
-  if(EVENT.christmas){
-    const y=6;
-    for(let x=0; x<buf.width; x+=14){
-      px(x,y,12,2,"rgba(26,156,85,0.55)");
-      px(x+2,y-2,2,2,"rgba(255,112,112,0.85)");
-      px(x+7,y-2,2,2,"rgba(255,232,105,0.85)");
-    }
-  }
-}
-function drawPlayer(wx,wy,facing,frame,hidden){
-  const s=worldToScreen(wx,wy);
-  const x=s.x|0, y=s.y|0;
-  px(x-4,y+5,8,2,"rgba(0,0,0,0.25)");
-  const alpha = hidden ? 0.45 : 1;
-  bctx.globalAlpha=alpha;
-
-  px(x-2,y+2,2,3,"#2f6dff"); px(x+1,y+2,2,3,"#2f6dff");
-  px(x-4,y-2,8,6,"#d8e6ff"); px(x-3,y-1,6,4,"#b8d3ff");
-  px(x-3,y-6,6,5,"#ffd6b8");
-  px(x-3,y-6,6,2,"#3a2620");
-  const fx=(facing===1)?1:-1;
-  px(x-1+fx,y-4,1,1,"#111"); px(x+1+fx,y-4,1,1,"#111");
-
-  bctx.globalAlpha=1;
-}
-function drawEmployee(wx,wy,facing,frame){
-  const s=worldToScreen(wx,wy);
-  const x=s.x|0, y=s.y|0;
-  px(x-4,y+5,8,2,"rgba(0,0,0,0.25)");
-
-  px(x-2,y+2,2,3,"#3d3d3d"); px(x+1,y+2,2,3,"#3d3d3d");
-  px(x-4,y-2,8,6,"#ff7070"); px(x-3,y-1,6,4,"#d94b4b");
-  px(x-3,y-6,6,5,"#ffd6b8");
-  px(x-3,y-6,6,2,"#2a2a2a");
-  const fx=(facing===1)?1:-1;
-  px(x-1+fx,y-4,1,1,"#111"); px(x+1+fx,y-4,1,1,"#111");
-}
-function drawFood(wx,wy,kind){
-  const s=worldToScreen(wx,wy); const x=s.x|0, y=s.y|0;
-  if(kind==="burger"){
-    px(x-5,y-4,10,2,"#d6a15f");
-    px(x-5,y-2,10,1,"#44d07b");
-    px(x-5,y-1,10,1,"#6b3f24");
-    px(x-5,y+1,10,2,"#c98e52");
-  } else {
-    px(x-4,y-5,8,10,"#ff9f43");
-    px(x-3,y-4,6,8,"#ffcc66");
-  }
-}
-function drawDrink(wx,wy,kind){
-  const s=worldToScreen(wx,wy); const x=s.x|0, y=s.y|0;
-  if(kind==="water"){
-    px(x-3,y-6,6,12,"#6ad7ff"); px(x-2,y-5,4,10,"#c4f2ff");
-  } else if(kind==="juice"){
-    px(x-4,y-5,8,10,"#ffd56a"); px(x-3,y-4,6,8,"#ff7cb5");
-  } else {
-    px(x-3,y-5,6,10,"#ff7070"); px(x-2,y-4,4,8,"#d94b4b");
-  }
-}
-function drawHolidayItem(wx,wy,kind){
-  const s=worldToScreen(wx,wy); const x=s.x|0, y=s.y|0;
-  if(kind==="cookie"){
-    px(x-4,y-4,8,8,"#c98e52"); px(x-3,y-3,6,6,"#d6a15f");
-  } else if(kind==="cocoa"){
-    px(x-4,y-3,8,7,"#cfd6dd"); px(x-3,y-2,6,5,"#6b3f24");
-  } else if(kind==="milk"){
-    px(x-3,y-6,6,12,"#cfd6dd"); px(x-2,y-5,4,10,"#ffffff");
-  } else {
-    px(x-1,y-6,2,12,"#cfd6dd"); px(x+1,y-6,2,2,"#ff7070");
-  }
-}
-function drawOrnament(wx,wy){
-  const s=worldToScreen(wx,wy); const x=s.x|0, y=s.y|0;
-  px(x-3,y-3,6,6,"#ff3b3b");
-  px(x-2,y-2,4,4,"#ff7a7a");
-  px(x-1,y-5,2,2,"#cfd6dd");
-  px(x-2,y-6,4,1,"#ffe869");
-  px(x+1,y-2,1,1,"rgba(255,255,255,0.7)");
-}
-function tintSnowOverlay(){ px(0,0,buf.width,buf.height,"rgba(220,240,255,0.06)"); }
-function drawNightOverlay(){ px(0,0,buf.width,buf.height,"rgba(14,18,28,0.56)"); }
-
-/* =========================
-   LOOP
-========================= */
-let lastFrame=performance.now();
-let frameCounter=0;
-
-function loop(now){
-  if(!game.playing) return;
-  const dt=Math.min(0.05,(now-lastFrame)/1000);
-  lastFrame=now;
-  frameCounter++;
-
-  cam.x = player.x - buf.width/2;
-  cam.y = player.y - buf.height/2;
-
-  if(!game.invOpen && !game.hidden && !hideAnim.active){
-    let mx=0,my=0;
-    if(keys.left) mx-=1;
-    if(keys.right) mx+=1;
-    if(keys.up) my-=1;
-    if(keys.down) my+=1;
-
-    const moving = (mx!==0 || my!==0);
-
-    // auto stop sprint if stamina runs out
-    if(game.sprint && player.stamina<=0){
-      sprintPointerId=null;
-      setSprint(false);
-      toast("Too tired to sprint.");
+  MP.roomUnsub = onValue(r(`rooms/${MP.roomId}`), (snap)=>{
+    const room = snap.val();
+    if(!room){
+      toast("Room closed.");
+      mpLeaveRoom();
+      showMenu();
+      return;
     }
 
-    if(moving){
-      const len=Math.hypot(mx,my);
-      mx/=len; my/=len;
+    MP.hostId = room.hostId;
 
-      const sprintMul=(game.sprint && player.stamina>0) ? 1.60 : 1.0;
-      let speed=player.speed*sprintMul;
-      if(cheer.active) speed*=1.08;
+    // Lobby UI when not started
+    if(!room.started && !game.playing){
+      showScreen("lobbyScreen");
+      $("lobbyInfo").innerHTML = `<b>${esc(room.hostName)}’s Server</b> • ${esc(room.diffKey)} • ${Object.keys(room.players||{}).length}/${room.maxPlayers}<br><span class="tiny muted">Room code: <b>${esc(MP.roomId)}</b></span>`;
+      const players = Object.values(room.players||{});
+      $("playerList").innerHTML = players.map((p,i)=>`<div style="padding:6px 0;"><b>${i+1}.</b> ${esc(p.name)}</div>`).join("");
 
-      player.face=(mx>=0)?1:-1;
-      moveWithCollision(player, player.x + mx*speed*dt, player.y + my*speed*dt, player.r);
+      const isHostNow = (room.hostId === MP.playerId);
+      $("hostStartBtn").style.display = isHostNow ? "inline-block" : "none";
+      $("hostStartBtn").disabled = players.length < 2;
+    }
 
-      // slower stamina drain
-      if(game.sprint){
-        player.stamina = Math.max(0, player.stamina - (22*dt));
+    // If started and we are not in game yet, start
+    if(room.started && !game.playing){
+      game.multiplayer=true;
+      game.mp.enabled=true;
+      startFromRoom(room.diffKey);
+    }
+
+    // Update other players live while game is running
+    if(game.playing){
+      const playersObj = room.players||{};
+      const others={};
+      for(const [pid,p] of Object.entries(playersObj)){
+        if(pid===MP.playerId) continue;
+        others[pid]=p;
       }
+      MP.otherPlayers = others;
     }
-  }
-
-  game.inHideSpot = hideSpots.some(s=>Math.hypot(player.x-s.x,player.y-s.y) < (s.r+player.r));
-  if(!game.inHideSpot && game.hidden && !hideAnim.active){
-    game.hidden=false; hideAnim.t=0; toast("You left the hiding spot.");
-  }
-
-  if(hideAnim.active){
-    if(hideAnim.dir===1){
-      hideAnim.t += dt/hideAnim.durClose;
-      if(hideAnim.t>=1){ hideAnim.t=1; hideAnim.active=false; game.hidden=true; toast("Hidden."); }
-    } else {
-      hideAnim.t -= dt/hideAnim.durOpen;
-      if(hideAnim.t<=0){ hideAnim.t=0; hideAnim.active=false; game.hidden=false; toast("Visible."); }
-    }
-  }
-
-  const trulyHidden = game.hidden || (hideAnim.t>0.92 && hideAnim.dir===1);
-  for(const e of employees){
-    const dx=player.x-e.x, dy=player.y-e.y;
-    const d=Math.hypot(dx,dy);
-    const sees = (!trulyHidden && d < (game.params.vis/(canvas.width/buf.width)));
-
-    if(sees){
-      const ux=dx/(d||1), uy=dy/(d||1);
-      e.face=(ux>=0)?1:-1;
-      moveWithCollision(e, e.x + ux*game.params.empSpeed*dt, e.y + uy*game.params.empSpeed*dt, e.r);
-    } else {
-      e.wander += (Math.random()-0.5)*0.65*dt;
-      const ux=Math.cos(e.wander), uy=Math.sin(e.wander);
-      e.face=(ux>=0)?1:-1;
-      moveWithCollision(e, e.x + ux*(game.params.empSpeed*0.42)*dt, e.y + uy*(game.params.empSpeed*0.42)*dt, e.r);
-      if(circleHitsWalls(e.x,e.y,e.r)) e.wander += Math.PI/2;
-    }
-
-    if(e.cool>0) e.cool--;
-
-    if(!trulyHidden && d < (e.r+player.r+2) && e.cool<=0){
-      player.health -= game.params.dmg;
-      e.cool = game.params.atkCool;
-      toast(`Attacked! (-${game.params.dmg})`);
-      if(player.health<=0){ player.health=0; loseGame("You got caught… Game Over."); return; }
-    }
-  }
-
-  if(!game.hidden && !hideAnim.active){
-    for(const f of foods){
-      if(!f.taken && Math.hypot(player.x-f.x,player.y-f.y) < 12){
-        f.taken=true; inventory[f.kind]=(inventory[f.kind]||0)+1; jingle();
-        toast(`Picked up ${f.kind==="burger"?"Burger":"Chips"} (Inventory)`);
-        if(game.invOpen) renderInventory();
-      }
-    }
-    for(const d of drinks){
-      if(!d.taken && Math.hypot(player.x-d.x,player.y-d.y) < 12){
-        d.taken=true; inventory[d.kind]=(inventory[d.kind]||0)+1; jingle();
-        const nm=d.kind==="water"?"Water":(d.kind==="juice"?"Juice":"Soda");
-        toast(`Picked up ${nm} (Inventory)`);
-        if(game.invOpen) renderInventory();
-      }
-    }
-    if(EVENT.christmas){
-      for(const h of holidayItems){
-        if(!h.taken && Math.hypot(player.x-h.x,player.y-h.y) < 12){
-          h.taken=true; inventory[h.kind]=(inventory[h.kind]||0)+1; jingle();
-          const nm=h.kind==="cookie"?"Cookie":(h.kind==="cocoa"?"Hot Cocoa":(h.kind==="milk"?"Milk":"Candy Cane"));
-          toast(`Picked up ${nm} (Inventory)`);
-          if(game.invOpen) renderInventory();
-        }
-      }
-    }
-
-    if(game.difficultyKey==="santa" && EVENT.christmas){
-      for(const o of ornaments){
-        if(!o.taken && Math.hypot(player.x-o.x,player.y-o.y) < 12){
-          o.taken=true;
-          game.ornamentsFound++;
-          jingle();
-          toast(`Ornament found! (${game.ornamentsFound}/${game.ornamentsNeeded})`);
-          if(game.ornamentsFound>=game.ornamentsNeeded){
-            toast("All ornaments found! Survive until 8:00 AM!");
-          }
-        }
-      }
-    }
-  }
-
-  // draw
-  px(0,0,buf.width,buf.height,"#e9eef3");
-
-  const startX=Math.floor(cam.x/TILE)-2;
-  const startY=Math.floor(cam.y/TILE)-2;
-  const endX=startX+Math.ceil(buf.width/TILE)+4;
-  const endY=startY+Math.ceil(buf.height/TILE)+4;
-
-  for(let ty=startY; ty<=endY; ty++){
-    for(let tx=startX; tx<=endX; tx++){
-      if(!inMap(tx,ty)) continue;
-      drawTile(tx,ty,map[idx(tx,ty)]);
-    }
-  }
-
-  drawDecor();
-  for(const f of foods) if(!f.taken) drawFood(f.x,f.y,f.kind);
-  for(const d of drinks) if(!d.taken) drawDrink(d.x,d.y,d.kind);
-
-  if(EVENT.christmas){
-    for(const h of holidayItems) if(!h.taken) drawHolidayItem(h.x,h.y,h.kind);
-    tintSnowOverlay();
-  }
-  if(game.difficultyKey==="santa" && EVENT.christmas){
-    for(const o of ornaments) if(!o.taken) drawOrnament(o.x,o.y);
-  }
-
-  for(const e of employees) drawEmployee(e.x,e.y,e.face,frameCounter);
-  drawPlayer(player.x,player.y,player.face,frameCounter,game.hidden);
-
-  if(EVENT.christmas && EVENT.snowParticles){
-    for(const p of snow){
-      p.y += p.spd*dt;
-      if(p.y > buf.height+4){ p.y=-4; p.x=Math.random()*buf.width; }
-      px(p.x,p.y,p.sz,p.sz,"rgba(255,255,255,0.55)");
-    }
-  }
-
-  drawNightOverlay();
-
-  // hide door overlay
-  if(hideAnim.t>0){
-    const t=hideAnim.t, w=buf.width, h=buf.height;
-    const leftW=(w/2)*t, rightW=(w/2)*t;
-    px(0,0,leftW,h,"rgba(8,8,10,0.92)");
-    px(w-rightW,0,rightW,h,"rgba(8,8,10,0.92)");
-    px((w/2)-1,0,2,h,`rgba(255,255,255,${0.10*t})`);
-    bctx.fillStyle=`rgba(255,255,255,${0.75*t})`;
-    bctx.font="10px Arial";
-    bctx.textAlign="center";
-    bctx.fillText("HIDING", w/2, 22);
-    bctx.font="9px Arial";
-    bctx.fillText("stay quiet...", w/2, 34);
-    bctx.textAlign="left";
-  }
-
-  ctx.imageSmoothingEnabled=false;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(buf,0,0,buf.width,buf.height,0,0,canvas.width,canvas.height);
-
-  updateUI();
-  requestAnimationFrame(loop);
+  });
 }
 
-/* =========================
-   DIFFICULTY UI
-========================= */
-function refreshDifficultyUI(){
-  stats=loadStats();
-  const sel=document.getElementById("diffSelect");
-  const unlockText=document.getElementById("unlockText");
-  sel.innerHTML="";
-  const opts=getDifficultyOptions(stats.survives);
-  for(const o of opts){
-    const op=document.createElement("option");
-    op.value=o.key;
-    op.textContent=o.unlocked?o.label:`${o.label} (Locked)`;
-    if(!o.unlocked) op.disabled=true;
-    sel.appendChild(op);
-  }
-  sel.value="easy";
-
-  let msg =
-    stats.survives<5 ? "Medium unlocks at 5 survives. Hard unlocks at 10." :
-    stats.survives<10 ? "Hard unlocks at 10 survives." :
-    "All main difficulties unlocked.";
-
-  if(EVENT.christmas){
-    msg += " Santa Difficulty is available (limited-time).";
-  }else{
-    msg += " Christmas event ended (Jan 11, 2026).";
-  }
-  unlockText.textContent = msg;
+async function mpStartRoom(){
+  if(!MP.roomId) return;
+  const snap = await get(r(`rooms/${MP.roomId}/players`));
+  const count = snap.exists() ? Object.keys(snap.val()).length : 0;
+  if(count<2) return toast("Need at least 2 players.");
+  await update(r(`rooms/${MP.roomId}`), { started:true });
+  await update(r(`publicRooms/${MP.roomId}`), { started:true });
 }
 
-/* =========================
-   MENU BUTTONS
-========================= */
-document.getElementById("howBtn").onclick=()=>showPanel("how");
+async function mpLeaveRoom(){
+  if(!MP.roomId) return;
 
-document.getElementById("statsBtn").onclick=()=>{
-  stats=loadStats();
-  document.getElementById("statsBox").innerHTML=`
-    <div><b>Name:</b> ${esc(profile.name)}</div>
-    <div><b>Total Play Time:</b> ${Math.floor(stats.totalPlaySeconds/60)}m ${stats.totalPlaySeconds%60}s</div>
-    <div><b>Total Survives:</b> ${stats.survives}</div>
-    <div><b>Total Deaths:</b> ${stats.deaths}</div>
-    <div class="divider"></div>
-    <div><b>Unlocks:</b></div>
-    <div>Medium: ${stats.survives>=5 ? "Unlocked" : "Locked (need 5 survives)"}</div>
-    <div>Hard: ${stats.survives>=10 ? "Unlocked" : "Locked (need 10 survives)"}</div>
-    <div>Santa 🎄: ${EVENT.christmas ? "Available (until Jan 11, 2026)" : "Not available (event ended)"}</div>
-  `;
-  showPanel("stats");
-};
+  // Remove my player
+  await remove(r(`rooms/${MP.roomId}/players/${MP.playerId}`));
 
-document.getElementById("lbBtn").onclick=()=>{
-  const lb=loadLB();
-  const box=document.getElementById("lbBox");
-  if(!lb.length) box.innerHTML=`<div>No runs yet.</div>`;
-  else box.innerHTML=lb.map((r,i)=>`
-    <div style="padding:6px 0;">
-      <b>#${i+1}</b> ${esc(r.name)} — <b>${Math.floor(r.seconds/60)}m ${r.seconds%60}s</b>
-      <span class="badge">(${diffLabel(r.difficulty)})</span>
-    </div>
-  `).join("");
-  showPanel("leaderboard");
-};
+  // If host, delete room + listing
+  const roomSnap = await get(r(`rooms/${MP.roomId}`));
+  const room = roomSnap.val();
+  const host = room && room.hostId === MP.playerId;
 
-document.getElementById("playBtn").onclick=()=>{
-  profile.name=nameInput.value.trim()||("Player"+rand4());
-  saveProfile(profile);
-
-  stats=loadStats();
-  const chosen=document.getElementById("diffSelect").value;
-  const opts=getDifficultyOptions(stats.survives);
-  const ok=opts.find(o=>o.key===chosen && o.unlocked);
-  game.difficultyKey= ok ? chosen : "easy";
-
-  if(game.difficultyKey==="santa" && !EVENT.christmas){
-    game.difficultyKey="easy";
-    toast("Santa event ended.");
+  if(host){
+    await remove(r(`publicRooms/${MP.roomId}`));
+    await remove(r(`rooms/${MP.roomId}`));
   }
 
-  game.params=diffParams(game.difficultyKey);
-  startGame();
+  // Cleanup listeners
+  if(MP.roomsUnsub) { MP.roomsUnsub(); MP.roomsUnsub=null; }
+  if(MP.roomUnsub) { MP.roomUnsub(); MP.roomUnsub=null; }
+
+  MP.roomId=null;
+  MP.isHost=false;
+  MP.hostId=null;
+  MP.otherPlayers={};
+
+  game.multiplayer=false;
+  game.mp.enabled=false;
+}
+
+function mpTick(dt){
+  // send position + health state
+  if(!MP.roomId) return;
+
+  // Throttle updates (10x/sec)
+  mpTick._t = (mpTick._t||0) + dt;
+  if(mpTick._t < 0.10) return;
+  mpTick._t = 0;
+
+  update(r(`rooms/${MP.roomId}/players/${MP.playerId}`), {
+    x: player.x,
+    y: player.y,
+    hp: player.health,
+    hidden: player.hidden,
+    ornaments: player.ornaments,
+    t: Date.now()
+  }).catch(()=>{});
+}
+
+/* Optional: sync pickups so everyone matches
+   Simple approach: host writes taken pickup indices.
+   Here we keep it lightweight: when you pick up, mark in DB under room/pickups/{index}=true
+*/
+function mpMarkPickupTaken(it){
+  if(!MP.roomId) return;
+  const i = items.indexOf(it);
+  if(i<0) return;
+  update(r(`rooms/${MP.roomId}/pickups/${i}`), { taken:true }).catch(()=>{});
+}
+
+// Listen for pickups taken
+function mpWatchPickups(){
+  if(!MP.roomId) return;
+  onValue(r(`rooms/${MP.roomId}/pickups`), (snap)=>{
+    const p = snap.val()||{};
+    for(const [k,v] of Object.entries(p)){
+      const i = Number(k);
+      if(Number.isFinite(i) && items[i]) items[i].taken = !!v.taken;
+    }
+  });
+}
+
+/* ===== Multiplayer UI buttons ===== */
+$("multiBtn").onclick = ()=>{
+  $("hostPanel").style.display="none";
+  $("joinPanel").style.display="none";
+  showScreen("multiScreen");
+};
+
+$("multiBackBtn").onclick = ()=>{
+  showScreen("menuScreen");
+};
+
+$("hostBtn").onclick = ()=>{
+  $("hostPanel").style.display="block";
+  $("joinPanel").style.display="none";
+  // set host diff options based on unlocks
+  const s=$("hostDiffSelect");
+  // allow selection even if locked for host (but you can keep it strict if you want)
+  s.value = $("diffSelect").value || "easy";
+};
+
+$("joinBtn").onclick = ()=>{
+  $("hostPanel").style.display="none";
+  $("joinPanel").style.display="block";
+  mpWatchPublicRooms();
+};
+
+$("refreshServersBtn").onclick = ()=> mpWatchPublicRooms();
+
+$("createServerBtn").onclick = async ()=>{
+  const maxPlayers = parseInt($("maxPlayersSelect").value,10);
+  const diffKey = $("hostDiffSelect").value;
+
+  // Enforce unlocks for host creation (optional)
+  if(diffKey==="medium" && !SAVE.unlocks.medium) return toast("Medium locked (survive 5x).");
+  if(diffKey==="hard" && !SAVE.unlocks.hard) return toast("Hard locked (survive 10x).");
+
+  toast("Creating server...");
+  await mpCreateRoom(maxPlayers, diffKey);
+  // watch pickups for sync
+  mpWatchPickups();
+};
+
+$("lobbyLeaveBtn").onclick = async ()=>{
+  await mpLeaveRoom();
+  showScreen("multiScreen");
+};
+
+$("hostStartBtn").onclick = async ()=>{
+  await mpStartRoom();
+  mpWatchPickups();
 };
 
 /* =========================
-   MULTIPLAYER (LOCAL TABS)
+   Start in menu
 ========================= */
-document.getElementById("multiBtn").onclick=()=>{
-  profile.name=nameInput.value.trim()||("Player"+rand4());
-  saveProfile(profile);
-  showPanel("multiplayer");
-};
-document.getElementById("hostBtn").onclick=()=>showPanel("hostSetup");
-document.getElementById("joinBtn").onclick=()=>{ renderServerList(); showPanel("joinList"); };
+showMenu();
+render(); // draw background once
 
-function loadServers(){
-  let s=safeParse(localStorage.getItem(LS.servers),[]);
-  if(!Array.isArray(s)) s=[];
-  const now=Date.now();
-  s=s.filter(x=>x && (now-(x.updatedAt||0))<10*60*1000);
-  localStorage.setItem(LS.servers,JSON.stringify(s));
-  return s;
-}
-function saveServers(s){ localStorage.setItem(LS.servers,JSON.stringify(s)); }
-function makeServerId(){ return "srv_"+Math.random().toString(16).slice(2)+"_"+Date.now(); }
-let lobbyPoll=null;
+</script>
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-document.getElementById("createServerBtn").onclick=()=>{
-  const maxP=parseInt(document.getElementById("maxPlayersSelect").value,10);
-  const servers=loadServers();
-  const id=makeServerId();
-  const server={
-    id, hostName:profile.name, maxPlayers:maxP,
-    players:[profile.name], started:false,
-    difficultyKey:document.getElementById("diffSelect").value||"easy",
-    updatedAt:Date.now()
+  // 🔴 PASTE YOUR FIREBASE VALUES HERE
+  const firebaseConfig = {
+    apiKey: "AIzaSyAnwWcA5NCQWmgeePIN-CzUZx7hr8wq_iE",
+    authDomain: "locked-till-morning.firebaseapp.com",
+    databaseURL: "https://locked-till-morning-default-rtdb.firebaseio.com",
+    projectId: "locked-till-morning",
+    storageBucket: "locked-till-morning.firebasestorage.app",
+    messagingSenderId: "148695967920",
+    appId: "1:148695967920:web:41553031e9084491e13375"
   };
-  if(server.difficultyKey==="santa" && !EVENT.christmas) server.difficultyKey="easy";
 
-  servers.push(server); saveServers(servers);
-  game.mode="multi"; game.serverId=id; game.isHost=true;
-  openLobby();
-};
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const auth = getAuth(app);
 
-function renderServerList(){
-  const box=document.getElementById("serverList");
-  const servers=loadServers().filter(s=>!s.started);
-  if(!servers.length){ box.innerHTML=`<div>No servers yet.</div>`; return; }
-  box.innerHTML=servers.map(s=>`
-    <div class="serverRow">
-      <div>
-        <div><b>${esc(s.hostName)}’s Server</b></div>
-        <div class="badge">${s.players.length}/${s.maxPlayers} • ${diffLabel(s.difficultyKey)}</div>
-      </div>
-      <button onclick="joinServer('${s.id}')">Join</button>
-    </div>
-  `).join("");
-}
+  signInAnonymously(auth);
 
-function joinServer(id){
-  const servers=loadServers();
-  const s=servers.find(x=>x.id===id);
-  if(!s) return toast("Server not found.");
-  if(s.started) return toast("Already started.");
-  if(s.players.includes(profile.name)) return toast("Already in server.");
-  if(s.players.length>=s.maxPlayers) return toast("Server full.");
-  s.players.push(profile.name); s.updatedAt=Date.now(); saveServers(servers);
-  game.mode="multi"; game.serverId=id; game.isHost=false;
-  openLobby();
-}
-
-function openLobby(){
-  showPanel("lobby");
-  if(lobbyPoll) clearInterval(lobbyPoll);
-  lobbyPoll=setInterval(updateLobby,700);
-  updateLobby();
-}
-
-function updateLobby(){
-  const servers=loadServers();
-  const s=servers.find(x=>x.id===game.serverId);
-  if(!s){ toast("Lobby closed."); leaveLobby(); return; }
-  s.updatedAt=Date.now(); saveServers(servers);
-
-  document.getElementById("lobbyInfo").innerHTML =
-    `<b>${esc(s.hostName)}’s Server</b> • ${s.players.length}/${s.maxPlayers} • ${diffLabel(s.difficultyKey)}`;
-
-  document.getElementById("playerList").innerHTML =
-    s.players.map((p,i)=>`<div style="padding:6px 0;"><b>${i+1}.</b> ${esc(p)}</div>`).join("");
-
-  const startBtn=document.getElementById("startHostBtn");
-  startBtn.style.display = game.isHost ? "inline-block" : "none";
-  startBtn.disabled = !(s.players.length>=2);
-
-  if(s.started){
-    game.difficultyKey=s.difficultyKey;
-    game.params=diffParams(game.difficultyKey);
-    if(lobbyPoll) clearInterval(lobbyPoll);
-    lobbyPoll=null;
-    startGame();
-    toast("Game started!");
-  }
-}
-
-document.getElementById("startHostBtn").onclick=()=>{
-  const servers=loadServers();
-  const s=servers.find(x=>x.id===game.serverId);
-  if(!s) return;
-  if(s.players.length<2) return toast("Need at least 2 players.");
-  s.started=true; s.updatedAt=Date.now(); saveServers(servers);
-};
-
-document.getElementById("leaveLobbyBtn").onclick=()=>leaveLobby();
-
-function leaveLobby(){
-  if(lobbyPoll) clearInterval(lobbyPoll);
-  lobbyPoll=null;
-  const servers=loadServers();
-  const s=servers.find(x=>x.id===game.serverId);
-  if(s){
-    s.players=s.players.filter(p=>p!==profile.name);
-    if(game.isHost || s.players.length===0) saveServers(servers.filter(x=>x.id!==game.serverId));
-    else { s.updatedAt=Date.now(); saveServers(servers); }
-  }
-  game.serverId=null; game.isHost=false;
-  showPanel("multiplayer");
-}
-function leaveMultiplayer(){
-  if(game.serverId) leaveLobby();
-  showPanel("menu");
-}
-setInterval(()=>{ if(document.getElementById("joinList").style.display==="flex") renderServerList(); },800);
-
-/* =========================
-   INIT
-========================= */
-(function init(){
-  showPanel("menu");
-  profile=loadProfile();
-  stats=loadStats();
-  nameInput.value=profile.name;
-  refreshDifficultyUI();
-
-  const top=document.getElementById("eventNoteTop");
-  const bottom=document.getElementById("eventNoteBottom");
-  if(CHRISTMAS_ACTIVE){
-    top.textContent = "✨ Christmas Update is active — ends Jan 11, 2026 ✨";
-    bottom.textContent = "🎁 Christmas + Santa Difficulty will leave on Jan 11, 2026.";
-  }else{
-    top.textContent = "Winter event has ended (Jan 11, 2026).";
-    bottom.textContent = "No Christmas content right now.";
-  }
-})();
+  // Expose for the game
+  window.firebaseDB = db;
+  window.firebaseRef = ref;
+  window.firebaseSet = set;
+  window.firebasePush = push;
+  window.firebaseOnValue = onValue;
+  window.firebaseRemove = remove;
 </script>
 </body>
 </html>
