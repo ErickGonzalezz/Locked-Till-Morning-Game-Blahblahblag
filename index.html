@@ -29,6 +29,10 @@
   input{min-width:230px;text-align:center}
   button{background:var(--btn)}
 
+  /* ✅ iOS multi-touch friendliness */
+  button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .pad button,.rightStack button{touch-action:none}
+
   #ui{
     position:fixed;top:8px;left:8px;font-size:12px;line-height:1.35;
     background:var(--ui);padding:8px 10px;border-radius:12px;display:none
@@ -65,7 +69,6 @@
   .serverRow:nth-child(odd){background:rgba(255,255,255,.05)}
   .badge{font-size:12px;opacity:.88}
 
-  /* Inventory overlay */
   #invOverlay{
     position:fixed;inset:0;background:rgba(10,10,14,.92);
     display:none;align-items:center;justify-content:center;padding:18px
@@ -156,7 +159,6 @@
   </div>
 </div>
 
-<!-- MENU -->
 <div id="menu" class="panel">
   <div class="xmasTitle">🎄 Locked Till Morning 🎄</div>
   <div class="xmasSpark" id="eventNoteTop">✨ Christmas Update is active ✨</div>
@@ -266,9 +268,8 @@
 <script>
 /* =========================
    SEASON / EVENT TIMER
-   Christmas ends Jan 11, 2026
 ========================= */
-const EVENT_END = new Date(2026, 0, 11, 0, 0, 0).getTime(); // Jan=0
+const EVENT_END = new Date(2026, 0, 11, 0, 0, 0).getTime();
 const CHRISTMAS_ACTIVE = Date.now() < EVENT_END;
 
 /* =========================
@@ -351,8 +352,7 @@ function jingle(){
 }
 
 /* =========================
-   DIFFICULTY (EMPLOYEES SLOWED)
-   + Santa Difficulty (limited-time)
+   DIFFICULTY
 ========================= */
 function getDifficultyOptions(survives){
   const base = [
@@ -801,16 +801,18 @@ const sprintBtn=document.getElementById("sprintBtn");
 const hideBtn=document.getElementById("hideBtn");
 const pauseBtn=document.getElementById("pauseBtn");
 
-/* ---- SPRINT FIX (FULL VERSION) ---- */
+/* ---- SPRINT FIX (works while moving on iOS) ---- */
 function setSprint(on){
   game.sprint = !!on;
   sprintBtn.textContent = game.sprint ? "🏃 Sprint: ON" : "🏃 Sprint: OFF";
   updateUI();
 }
-sprintBtn.onclick=()=>{
+function toggleSprintNow(e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
   if(!game.playing) return;
   if(game.invOpen) return toast("Close inventory first.");
   if(game.hidden || hideAnim.active) return toast("Can't sprint while hiding.");
+
   if(game.sprint){
     setSprint(false);
     toast("Sprint OFF");
@@ -819,7 +821,10 @@ sprintBtn.onclick=()=>{
   if(player.stamina <= 8) return toast("Too tired to sprint.");
   setSprint(true);
   toast("Sprint ON");
-};
+}
+sprintBtn.addEventListener("pointerdown", toggleSprintNow, { passive:false });
+sprintBtn.addEventListener("touchstart", toggleSprintNow, { passive:false });
+sprintBtn.addEventListener("click", toggleSprintNow);
 /* ---- END SPRINT FIX ---- */
 
 hideBtn.onclick=()=>{
@@ -829,7 +834,7 @@ hideBtn.onclick=()=>{
   if(hideAnim.active) return;
   if(!game.hidden){
     hideAnim.active=true; hideAnim.dir=1; hideAnim.t=0; toast("Hiding...");
-    setSprint(false); // stop sprint when hiding
+    setSprint(false);
   }else{
     hideAnim.active=true; hideAnim.dir=-1; hideAnim.t=1; toast("Leaving...");
   }
@@ -847,7 +852,6 @@ pauseBtn.onclick=()=>{
   refreshDifficultyUI();
 };
 
-// dpad
 const keys={up:false,down:false,left:false,right:false};
 function bindHold(btn, key){
   const el=document.getElementById(btn);
@@ -898,7 +902,6 @@ function loseGame(msg){
    DRAW HELPERS
 ========================= */
 function px(x,y,w,h,c){ bctx.fillStyle=c; bctx.fillRect(x|0,y|0,w|0,h|0); }
-
 function drawTile(tx,ty,t){
   const x = tx*TILE - cam.x;
   const y = ty*TILE - cam.y;
@@ -930,7 +933,6 @@ function drawTile(tx,ty,t){
     px(x+1,y+1,TILE-2,TILE-2,"#434a55");
   }
 }
-
 function drawDecor(){
   if(EVENT.christmas){
     const y=6;
@@ -941,7 +943,6 @@ function drawDecor(){
     }
   }
 }
-
 function drawPlayer(wx,wy,facing,frame,hidden){
   const s=worldToScreen(wx,wy);
   const x=s.x|0, y=s.y|0;
@@ -958,7 +959,6 @@ function drawPlayer(wx,wy,facing,frame,hidden){
 
   bctx.globalAlpha=1;
 }
-
 function drawEmployee(wx,wy,facing,frame){
   const s=worldToScreen(wx,wy);
   const x=s.x|0, y=s.y|0;
@@ -971,7 +971,6 @@ function drawEmployee(wx,wy,facing,frame){
   const fx=(facing===1)?1:-1;
   px(x-1+fx,y-4,1,1,"#111"); px(x+1+fx,y-4,1,1,"#111");
 }
-
 function drawFood(wx,wy,kind){
   const s=worldToScreen(wx,wy); const x=s.x|0, y=s.y|0;
   if(kind==="burger"){
@@ -984,7 +983,6 @@ function drawFood(wx,wy,kind){
     px(x-3,y-4,6,8,"#ffcc66");
   }
 }
-
 function drawDrink(wx,wy,kind){
   const s=worldToScreen(wx,wy); const x=s.x|0, y=s.y|0;
   if(kind==="water"){
@@ -995,7 +993,6 @@ function drawDrink(wx,wy,kind){
     px(x-3,y-5,6,10,"#ff7070"); px(x-2,y-4,4,8,"#d94b4b");
   }
 }
-
 function drawHolidayItem(wx,wy,kind){
   const s=worldToScreen(wx,wy); const x=s.x|0, y=s.y|0;
   if(kind==="cookie"){
@@ -1008,7 +1005,6 @@ function drawHolidayItem(wx,wy,kind){
     px(x-1,y-6,2,12,"#cfd6dd"); px(x+1,y-6,2,2,"#ff7070");
   }
 }
-
 function drawOrnament(wx,wy){
   const s=worldToScreen(wx,wy); const x=s.x|0, y=s.y|0;
   px(x-3,y-3,6,6,"#ff3b3b");
@@ -1017,7 +1013,6 @@ function drawOrnament(wx,wy){
   px(x-2,y-6,4,1,"#ffe869");
   px(x+1,y-2,1,1,"rgba(255,255,255,0.7)");
 }
-
 function tintSnowOverlay(){ px(0,0,buf.width,buf.height,"rgba(220,240,255,0.06)"); }
 function drawNightOverlay(){ px(0,0,buf.width,buf.height,"rgba(14,18,28,0.56)"); }
 
@@ -1052,7 +1047,6 @@ function loop(now){
   cam.x = player.x - buf.width/2;
   cam.y = player.y - buf.height/2;
 
-  // movement
   if(!game.invOpen && !game.hidden && !hideAnim.active){
     let mx=0,my=0;
     if(keys.left) mx-=1;
@@ -1062,7 +1056,6 @@ function loop(now){
 
     const moving = (mx!==0 || my!==0);
 
-    // Auto turn off sprint when stamina is empty
     if(game.sprint && player.stamina<=0){
       setSprint(false);
       toast("Sprint ended (out of stamina).");
@@ -1072,7 +1065,6 @@ function loop(now){
       const len=Math.hypot(mx,my);
       mx/=len; my/=len;
 
-      // Strong sprint boost
       const sprintMul=(game.sprint && player.stamina>0) ? 1.60 : 1.0;
       let speed=player.speed*sprintMul;
       if(cheer.active) speed*=1.08;
@@ -1080,20 +1072,17 @@ function loop(now){
       player.face=(mx>=0)?1:-1;
       moveWithCollision(player, player.x + mx*speed*dt, player.y + my*speed*dt, player.r);
 
-      // Drain stamina ONLY while moving + sprint ON (slower drain)
       if(game.sprint){
-        player.stamina = Math.max(0, player.stamina - (24*dt)); // <-- slower drain
+        player.stamina = Math.max(0, player.stamina - (24*dt)); // slower drain
       }
     }
   }
 
-  // hide spot check
   game.inHideSpot = hideSpots.some(s=>Math.hypot(player.x-s.x,player.y-s.y) < (s.r+player.r));
   if(!game.inHideSpot && game.hidden && !hideAnim.active){
     game.hidden=false; hideAnim.t=0; toast("You left the hiding spot.");
   }
 
-  // hide animation
   if(hideAnim.active){
     if(hideAnim.dir===1){
       hideAnim.t += dt/hideAnim.durClose;
@@ -1104,7 +1093,6 @@ function loop(now){
     }
   }
 
-  // enemy AI
   const trulyHidden = game.hidden || (hideAnim.t>0.92 && hideAnim.dir===1);
   for(const e of employees){
     const dx=player.x-e.x, dy=player.y-e.y;
@@ -1133,7 +1121,6 @@ function loop(now){
     }
   }
 
-  // pickups
   if(!game.hidden && !hideAnim.active){
     for(const f of foods){
       if(!f.taken && Math.hypot(player.x-f.x,player.y-f.y) < 12){
@@ -1176,7 +1163,6 @@ function loop(now){
     }
   }
 
-  // draw
   px(0,0,buf.width,buf.height,"#e9eef3");
 
   const startX=Math.floor(cam.x/TILE)-2;
@@ -1216,7 +1202,22 @@ function loop(now){
   }
 
   drawNightOverlay();
-  drawHideDoorOverlay();
+
+  // hide door overlay
+  if(hideAnim.t>0){
+    const t=hideAnim.t, w=buf.width, h=buf.height;
+    const leftW=(w/2)*t, rightW=(w/2)*t;
+    px(0,0,leftW,h,"rgba(8,8,10,0.92)");
+    px(w-rightW,0,rightW,h,"rgba(8,8,10,0.92)");
+    px((w/2)-1,0,2,h,`rgba(255,255,255,${0.10*t})`);
+    bctx.fillStyle=`rgba(255,255,255,${0.75*t})`;
+    bctx.font="10px Arial";
+    bctx.textAlign="center";
+    bctx.fillText("HIDING", w/2, 22);
+    bctx.font="9px Arial";
+    bctx.fillText("stay quiet...", w/2, 34);
+    bctx.textAlign="left";
+  }
 
   ctx.imageSmoothingEnabled=false;
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -1440,7 +1441,7 @@ function leaveMultiplayer(){
 setInterval(()=>{ if(document.getElementById("joinList").style.display==="flex") renderServerList(); },800);
 
 /* =========================
-   INIT (event notes)
+   INIT
 ========================= */
 (function init(){
   showPanel("menu");
