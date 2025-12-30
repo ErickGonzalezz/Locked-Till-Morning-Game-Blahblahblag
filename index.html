@@ -25,7 +25,6 @@
     html,body{height:100%; margin:0; background:radial-gradient(1200px 700px at 50% 0%, #172a54 0%, #0b1220 55%, #070b14 100%); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;}
     body{overflow:hidden;}
 
-    /* ===== Canvas ===== */
     #wrap{position:fixed; inset:0; display:flex; align-items:stretch; justify-content:center;}
     #game{
       width:100vw; height:100vh;
@@ -36,7 +35,6 @@
       touch-action:none;
     }
 
-    /* ===== Screens ===== */
     .screen{
       position:fixed; inset:0; display:none;
       align-items:center; justify-content:center;
@@ -75,7 +73,6 @@
     .badge.warn{background:rgba(255,211,107,.10); border-color:rgba(255,211,107,.22);}
     .badge.bad{background:rgba(255,107,122,.10); border-color:rgba(255,107,122,.22);}
 
-    /* ===== Buttons / Inputs ===== */
     .btn{
       border:0;
       border-radius:14px;
@@ -107,7 +104,6 @@
     .muted{color:var(--muted);}
     .tiny{font-size:13px; color:var(--muted);}
 
-    /* ===== Multiplayer list ===== */
     .serverRow{
       display:flex; align-items:center; justify-content:space-between;
       gap:12px; padding:12px;
@@ -117,7 +113,6 @@
       margin:10px 0;
     }
 
-    /* ===== In-game HUD ===== */
     #hud{
       position:fixed; inset:0;
       pointer-events:none;
@@ -149,7 +144,6 @@
     .barFill.thr{background:linear-gradient(90deg, rgba(123,220,255,.95), rgba(123,220,255,.55));}
     .barFill.sta{background:linear-gradient(90deg, rgba(103,240,165,.95), rgba(123,220,255,.65));}
 
-    /* ===== Mobile controls ===== */
     #controls{
       position:absolute; inset:0;
       pointer-events:none;
@@ -176,6 +170,7 @@
     }
     .padBtn:active{filter:brightness(1.2); transform:scale(.99);}
     .padBtn.empty{background:transparent; border-color:transparent;}
+
     .rightStack{
       position:absolute; right:12px; bottom:12px;
       display:flex; flex-direction:column; gap:10px;
@@ -196,7 +191,6 @@
     .actionBtn.good{background:rgba(103,240,165,.16); border-color:rgba(103,240,165,.22);}
     .actionBtn.bad{background:rgba(255,107,122,.16); border-color:rgba(255,107,122,.22);}
 
-    /* Inventory tray */
     #invTray{
       position:absolute; left:50%; transform:translateX(-50%);
       bottom:12px;
@@ -218,12 +212,12 @@
       display:flex; flex-direction:column; gap:6px;
       align-items:center; justify-content:center;
       user-select:none;
+      touch-action:none;
     }
     .slot:active{filter:brightness(1.2);}
     .slotName{font-weight:900; font-size:12px; text-align:center; color:#e9eefc;}
     .slotQty{font-weight:900; font-size:12px; color:var(--muted);}
 
-    /* Toast */
     #toast{
       position:fixed; left:50%; transform:translateX(-50%);
       top:14px; z-index:50;
@@ -239,7 +233,6 @@
       backdrop-filter:blur(6px);
     }
 
-    /* Make inventory not cover movement pad on tiny screens */
     @media (max-width: 430px){
       .pad{width:150px; height:150px;}
       .actionBtn{width:146px;}
@@ -397,7 +390,7 @@
   </div>
 </div>
 
-<!-- ===== PAUSE / INGAME MENU ===== -->
+<!-- ===== PAUSE ===== -->
 <div class="screen" id="pauseScreen">
   <div class="card">
     <div class="title">Menu</div>
@@ -484,36 +477,30 @@
 
 <script type="module">
 /* =========================================================
-   ✅ LOCKED TILL MORNING — FULL SINGLE-FILE GAME
-   - Mobile controls (D-pad, Hide, Use/Pickup, HOLD Sprint)
-   - Inventory (tap to use)
-   - Hunger/Thirst/Health/Stamina
-   - Employees patrol/chase (NOT too fast)
-   - Camera limited (you can't see whole map)
-   - Christmas center + cookies/milk
-   - Santa difficulty: find 5 ornaments
-   - Save: localStorage (survives updates on same domain)
-   - Multiplayer (worldwide) using Firebase Realtime DB
+   LOCKED TILL MORNING — SINGLE FILE (FIXED)
+   ✅ IMPORTANT FIXES:
+   1) Only ONE Firebase setup (no duplicate scripts)
+   2) HOLD-TO-SPRINT works while moving (multi-touch safe)
    ========================================================= */
 
 /* =========================
-   🔥 Firebase (PASTE YOURS)
+   Firebase (YOUR CONFIG)
 ========================= */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getDatabase, ref, set, update, get, onValue, onDisconnect,
-  push, remove, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+  remove, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-/* ===== PASTE YOUR firebaseConfig HERE ===== */
 const firebaseConfig = {
-  apiKey: "PASTE_YOURS",
-  authDomain: "PASTE_YOURS",
-  databaseURL: "PASTE_YOURS",
-  projectId: "PASTE_YOURS",
-  storageBucket: "PASTE_YOURS",
-  messagingSenderId: "PASTE_YOURS",
-  appId: "PASTE_YOURS"
+  apiKey: "AIzaSyAnwWcA5NCQWmgeePIN-CzUZx7hr8wq_iE",
+  authDomain: "locked-till-morning.firebaseapp.com",
+  databaseURL: "https://locked-till-morning-default-rtdb.firebaseio.com",
+  projectId: "locked-till-morning",
+  storageBucket: "locked-till-morning.firebasestorage.app",
+  messagingSenderId: "148695967920",
+  appId: "1:148695967920:web:41553031e9084491e13375"
+  // measurementId optional (not needed for this game)
 };
 
 const app = initializeApp(firebaseConfig);
@@ -563,25 +550,24 @@ let SAVE = loadSave();
 /* =========================
    Game constants
 ========================= */
-const TILE=16;               // pixel tile
-const WORLD_W=120;           // tiles
-const WORLD_H=80;            // tiles
-const VIEW_TILES_X=24;       // camera width in tiles
-const VIEW_TILES_Y=14;       // camera height in tiles
+const TILE=16;
+const WORLD_W=120;
+const WORLD_H=80;
+const VIEW_TILES_X=24;
+const VIEW_TILES_Y=14;
 
-const DAY_START_MIN=0;       // 12:00 AM
-const DAY_END_MIN=8*60;      // 8:00 AM
-const REAL_SEC_PER_INGAME_MIN=1; // 1 sec => 1 min
+const DAY_START_MIN=0;
+const DAY_END_MIN=8*60;
+const REAL_SEC_PER_INGAME_MIN=1;
 
 /* =========================
    Difficulty tuning
 ========================= */
 function diffParams(key){
-  // Employees are intentionally not too fast.
-  if(key==="easy") return { enemySpeed: 0.70, enemySight: 4.8, enemyCount: 3, hungerDrain: 0.08, thirstDrain:0.10, staminaDrain:0.70, staminaRegen:0.95 };
+  if(key==="easy")   return { enemySpeed: 0.70, enemySight: 4.8, enemyCount: 3, hungerDrain: 0.08, thirstDrain:0.10, staminaDrain:0.70, staminaRegen:0.95 };
   if(key==="medium") return { enemySpeed: 0.85, enemySight: 5.6, enemyCount: 4, hungerDrain: 0.10, thirstDrain:0.12, staminaDrain:0.78, staminaRegen:0.90 };
-  if(key==="hard") return { enemySpeed: 1.00, enemySight: 6.2, enemyCount: 5, hungerDrain: 0.12, thirstDrain:0.15, staminaDrain:0.86, staminaRegen:0.84 };
-  if(key==="santa") return { enemySpeed: 0.88, enemySight: 5.8, enemyCount: 4, hungerDrain: 0.10, thirstDrain:0.12, staminaDrain:0.78, staminaRegen:0.90 };
+  if(key==="hard")   return { enemySpeed: 1.00, enemySight: 6.2, enemyCount: 5, hungerDrain: 0.12, thirstDrain:0.15, staminaDrain:0.86, staminaRegen:0.84 };
+  if(key==="santa")  return { enemySpeed: 0.88, enemySight: 5.8, enemyCount: 4, hungerDrain: 0.10, thirstDrain:0.12, staminaDrain:0.78, staminaRegen:0.90 };
   return diffParams("easy");
 }
 
@@ -599,16 +585,15 @@ resize();
 
 /* =========================
    Map generation (pixel mall)
-   We generate tiles + props.
 ========================= */
 const T={
   FLOOR:0, CARPET:1, WALL:2, GLASS:3, DOOR:4, SHOP:5, KIOSK:6, PLANT:7, LOCKER:8, TREE:9, TABLE:10
 };
 
 const tile = new Uint8Array(WORLD_W*WORLD_H);
-const solid = new Uint8Array(WORLD_W*WORLD_H); // 1 if blocks movement
-const hideSpot = new Uint8Array(WORLD_W*WORLD_H); // 1 if can hide here
-const items = []; // pickups
+const solid = new Uint8Array(WORLD_W*WORLD_H);
+const hideSpot = new Uint8Array(WORLD_W*WORLD_H);
+const items = [];
 
 function idx(x,y){ return y*WORLD_W + x; }
 function inb(x,y){ return x>=0 && y>=0 && x<WORLD_W && y<WORLD_H; }
@@ -639,105 +624,57 @@ function placeProp(x,y, t, canHide=false){
   if(canHide) hideSpot[idx(x,y)] = 1;
 }
 function rand(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
-
-function spawnItem(x,y, kind){
-  items.push({x,y,kind, taken:false});
-}
+function spawnItem(x,y, kind){ items.push({x,y,kind, taken:false}); }
 
 function buildMall(){
-  // Base floors
   fillRect(0,0,WORLD_W,WORLD_H, T.FLOOR, 0);
-
-  // Outer walls
   outlineRect(0,0,WORLD_W,WORLD_H, T.WALL, 1);
 
-  // Main corridors
-  // Horizontal concourse
   fillRect(10, 35, 100, 10, T.CARPET, 0);
-  // Vertical concourse
   fillRect(55, 10, 10, 60, T.CARPET, 0);
-
-  // Center atrium (Meet Santa area)
   fillRect(45, 28, 30, 24, T.CARPET, 0);
 
-  // Shops (rectangles)
   const shops = [
-    {x:6,y:6,w:22,h:18},
-    {x:34,y:6,w:18,h:18},
-    {x:70,y:6,w:22,h:18},
-    {x:96,y:6,w:18,h:18},
-
-    {x:6,y:52,w:22,h:22},
-    {x:34,y:56,w:18,h:18},
-    {x:70,y:56,w:22,h:18},
-    {x:96,y:52,w:18,h:22},
+    {x:6,y:6,w:22,h:18},{x:34,y:6,w:18,h:18},{x:70,y:6,w:22,h:18},{x:96,y:6,w:18,h:18},
+    {x:6,y:52,w:22,h:22},{x:34,y:56,w:18,h:18},{x:70,y:56,w:22,h:18},{x:96,y:52,w:18,h:22},
   ];
   for(const s of shops){
-    // interior floor a bit different
     fillRect(s.x+1,s.y+1,s.w-2,s.h-2, T.SHOP, 0);
     outlineRect(s.x,s.y,s.w,s.h, T.WALL, 1);
-    // door opening into concourse (remove a wall tile)
+
     const doorX = s.x + Math.floor(s.w/2);
     const doorY = (s.y < 30) ? (s.y+s.h-1) : (s.y);
     if(inb(doorX,doorY)){
       tile[idx(doorX,doorY)] = T.DOOR;
       solid[idx(doorX,doorY)] = 0;
-      // glass around door for style
       if(inb(doorX-1,doorY)){ tile[idx(doorX-1,doorY)] = T.GLASS; solid[idx(doorX-1,doorY)] = 1; }
       if(inb(doorX+1,doorY)){ tile[idx(doorX+1,doorY)] = T.GLASS; solid[idx(doorX+1,doorY)] = 1; }
     }
 
-    // props inside shops: shelves (lockers style), plants
-    for(let i=0;i<rand(2,4);i++){
-      placeProp(rand(s.x+2,s.x+s.w-3), rand(s.y+2,s.y+s.h-3), T.LOCKER, true);
-    }
-    for(let i=0;i<rand(1,3);i++){
-      placeProp(rand(s.x+2,s.x+s.w-3), rand(s.y+2,s.y+s.h-3), T.PLANT, true);
-    }
+    for(let i=0;i<rand(2,4);i++) placeProp(rand(s.x+2,s.x+s.w-3), rand(s.y+2,s.y+s.h-3), T.LOCKER, true);
+    for(let i=0;i<rand(1,3);i++) placeProp(rand(s.x+2,s.x+s.w-3), rand(s.y+2,s.y+s.h-3), T.PLANT, true);
   }
 
-  // Kiosks in concourse (hide spots)
-  for(const k of [
-    {x:30,y:37},{x:40,y:40},{x:78,y:38},{x:86,y:42},
-    {x:58,y:22},{x:60,y:58}
-  ]){
+  for(const k of [{x:30,y:37},{x:40,y:40},{x:78,y:38},{x:86,y:42},{x:58,y:22},{x:60,y:58}]){
     placeProp(k.x,k.y, T.KIOSK, true);
-    // little table next to it
     if(inb(k.x+1,k.y)) placeProp(k.x+1,k.y, T.TABLE, false);
   }
 
-  // Decorations (trees) around atrium
-  for(const p of [
-    {x:46,y:29},{x:72,y:29},{x:46,y:50},{x:72,y:50},
-    {x:56,y:28},{x:62,y:28},{x:56,y:51},{x:62,y:51}
-  ]) placeProp(p.x,p.y, T.TREE, true);
-
-  // Lockers / plants in hallways
-  for(let i=0;i<20;i++){
-    placeProp(rand(12,108), rand(12,68), (Math.random()<0.5?T.PLANT:T.LOCKER), true);
+  for(const p of [{x:46,y:29},{x:72,y:29},{x:46,y:50},{x:72,y:50},{x:56,y:28},{x:62,y:28},{x:56,y:51},{x:62,y:51}]){
+    placeProp(p.x,p.y, T.TREE, true);
   }
 
-  // Spawn items (food/drink) around the map
+  for(let i=0;i<20;i++) placeProp(rand(12,108), rand(12,68), (Math.random()<0.5?T.PLANT:T.LOCKER), true);
+
   const foods=["chips","burger","cookie","pizza","sandwich"];
   const drinks=["water","juice","milk","soda","sports"];
-  for(let i=0;i<28;i++){
-    spawnItem(rand(8,112), rand(8,72), {type:"food", name:foods[rand(0,foods.length-1)]});
-  }
-  for(let i=0;i<24;i++){
-    spawnItem(rand(8,112), rand(8,72), {type:"drink", name:drinks[rand(0,drinks.length-1)]});
-  }
+  for(let i=0;i<28;i++) spawnItem(rand(8,112), rand(8,72), {type:"food", name:foods[rand(0,foods.length-1)]});
+  for(let i=0;i<24;i++) spawnItem(rand(8,112), rand(8,72), {type:"drink", name:drinks[rand(0,drinks.length-1)]});
 
-  // Cookies + milk in center atrium (Christmas)
   for(let i=0;i<8;i++) spawnItem(rand(50,70), rand(32,48), {type:"food", name:"cookie"});
   for(let i=0;i<5;i++) spawnItem(rand(50,70), rand(32,48), {type:"drink", name:"milk"});
 
-  // Ornaments (Santa difficulty)
-  for(let i=0;i<5;i++){
-    spawnItem(rand(10,110), rand(10,70), {type:"ornament", name:"ornament"});
-  }
-
-  // Player start store (near top-left shop)
-  // We'll start in shop1 interior area
+  for(let i=0;i<5;i++) spawnItem(rand(10,110), rand(10,70), {type:"ornament", name:"ornament"});
 }
 buildMall();
 
@@ -767,7 +704,6 @@ const inv = {
 };
 
 function invAdd(kind){
-  // kind: {type, name}
   let slot = inv.slots[2];
   if(kind.type==="food") slot=inv.slots[0];
   if(kind.type==="drink") slot=inv.slots[1];
@@ -782,25 +718,23 @@ function invUse(slotIndex){
   const slot=inv.slots[slotIndex];
   const names=Object.keys(slot.items);
   if(!names.length) return toast("Empty.");
-  const name = names[0]; // simplest: uses first item
+  const name = names[0];
   slot.items[name]--;
   if(slot.items[name]<=0) delete slot.items[name];
 
-  // Effects
   if(slot.key==="food"){
     const hungerGain = (name==="cookie") ? 12 : 18;
     player.hunger = clamp(player.hunger + hungerGain, 0, 100);
     player.health = clamp(player.health + 2, 0, 100);
-    toast(`Ate ${name} (+hunger)`);
+    toast(`Ate ${name}`);
   }else if(slot.key==="drink"){
     const thirstGain = (name==="water")?26 : (name==="milk"?22 : 18);
     player.thirst = clamp(player.thirst + thirstGain, 0, 100);
-    // stamina except soda
     if(name!=="soda"){
       player.stamina = clamp(player.stamina + 18, 0, 100);
-      toast(`Drank ${name} (+thirst +stamina)`);
+      toast(`Drank ${name}`);
     }else{
-      toast(`Drank soda (+thirst)`);
+      toast(`Drank soda`);
     }
   }else{
     if(name==="ornament"){
@@ -810,11 +744,9 @@ function invUse(slotIndex){
       toast(`Used ${name}`);
     }
   }
-
   renderInv();
 }
 
-/* Inventory UI */
 function renderInv(){
   const tray=$("invTray");
   tray.innerHTML="";
@@ -829,7 +761,7 @@ function renderInv(){
       e.preventDefault();
       if(!game.playing) return;
       invUse(i);
-    });
+    }, {passive:false});
     tray.appendChild(el);
   });
 }
@@ -838,15 +770,7 @@ function renderInv(){
    Enemies (employees)
 ========================= */
 function makeEnemy(x,y, variant){
-  return {
-    x,y,
-    vx:0, vy:0,
-    mode:"patrol", // patrol/chase
-    tx:x, ty:y,
-    spotTimer:0,
-    hitCooldown:0,
-    variant
-  };
+  return { x,y, vx:0, vy:0, mode:"patrol", tx:x, ty:y, spotTimer:0, hitCooldown:0, variant };
 }
 let enemies=[];
 
@@ -863,7 +787,6 @@ const game = {
   lastTick: performance.now(),
   playSecondsThisRun: 0,
   multiplayer:false,
-  // Multiplayer runtime
   mp: {
     enabled:false,
     roomId:null,
@@ -878,25 +801,21 @@ const game = {
 localStorage.setItem("ltm_pid", game.mp.playerId);
 
 /* =========================
-   UI screen switching
+   Screens
 ========================= */
 function showScreen(id){
-  // Hide all overlay screens, then show one
   ["menuScreen","howScreen","statsScreen","pauseScreen","multiScreen","lobbyScreen"].forEach(s=>$(s).classList.remove("show"));
   if(id) $(id).classList.add("show");
 }
 function refreshMenuLocks(){
-  // Name
   $("nameInput").value = SAVE.name;
 
-  // Unlocks
   const diffSel=$("diffSelect");
   const med=diffSel.querySelector('option[value="medium"]');
   const hard=diffSel.querySelector('option[value="hard"]');
   med.disabled = !SAVE.unlocks.medium;
   hard.disabled = !SAVE.unlocks.hard;
 
-  // Keep selection safe
   if(diffSel.value==="medium" && med.disabled) diffSel.value="easy";
   if(diffSel.value==="hard" && hard.disabled) diffSel.value="easy";
 }
@@ -906,7 +825,6 @@ refreshMenuLocks();
    Time formatting
 ========================= */
 function formatTimeFromMinutes(m){
-  // m = minutes since 12:00 AM
   const total = m % (24*60);
   let h = Math.floor(total/60);
   const min = total%60;
@@ -916,41 +834,40 @@ function formatTimeFromMinutes(m){
 }
 
 /* =========================
-   Controls (keyboard + mobile)
+   Controls (FIXED hold sprint + multi-touch)
 ========================= */
 const keys = {up:false,down:false,left:false,right:false};
 let sprintHeld=false;
+
+// stop iOS page scroll / zoom during game button touches
+document.addEventListener("touchmove",(e)=>{ if(game.playing && !game.paused) e.preventDefault(); }, {passive:false});
 
 function bindPad(){
   document.querySelectorAll(".padBtn").forEach(btn=>{
     const k=btn.getAttribute("data-key");
     if(!k) return;
-    const down = (e)=>{
-      e.preventDefault();
-      keys[k]=true;
-    };
-    const up = (e)=>{
-      e.preventDefault();
-      keys[k]=false;
-    };
-    btn.addEventListener("pointerdown", down);
-    btn.addEventListener("pointerup", up);
-    btn.addEventListener("pointercancel", up);
-    btn.addEventListener("pointerleave", up);
+
+    const down = (e)=>{ e.preventDefault(); e.stopPropagation(); keys[k]=true; };
+    const up   = (e)=>{ e.preventDefault(); e.stopPropagation(); keys[k]=false; };
+
+    btn.addEventListener("pointerdown", down, {passive:false});
+    btn.addEventListener("pointerup", up, {passive:false});
+    btn.addEventListener("pointercancel", up, {passive:false});
+    btn.addEventListener("pointerleave", up, {passive:false});
   });
 
-  // Hold-to-sprint (fixes your issue)
+  // HOLD-TO-SPRINT (multi-touch safe)
   const sBtn=$("sprintHoldBtn");
-  const sDown=(e)=>{ e.preventDefault(); sprintHeld=true; sBtn.textContent="SPRINTING..."; };
-  const sUp=(e)=>{ e.preventDefault(); sprintHeld=false; sBtn.textContent="HOLD TO SPRINT"; };
-  sBtn.addEventListener("pointerdown", sDown);
-  sBtn.addEventListener("pointerup", sUp);
-  sBtn.addEventListener("pointercancel", sUp);
-  sBtn.addEventListener("pointerleave", sUp);
+  const sDown=(e)=>{ e.preventDefault(); e.stopPropagation(); sprintHeld=true; sBtn.textContent="SPRINTING..."; };
+  const sUp  =(e)=>{ e.preventDefault(); e.stopPropagation(); sprintHeld=false; sBtn.textContent="HOLD TO SPRINT"; };
+  sBtn.addEventListener("pointerdown", sDown, {passive:false});
+  sBtn.addEventListener("pointerup", sUp, {passive:false});
+  sBtn.addEventListener("pointercancel", sUp, {passive:false});
+  sBtn.addEventListener("pointerleave", sUp, {passive:false});
 
-  $("hideBtn").addEventListener("pointerdown",(e)=>{ e.preventDefault(); if(game.playing) toggleHide(); });
-  $("useBtn").addEventListener("pointerdown",(e)=>{ e.preventDefault(); if(game.playing) pickupOrInteract(); });
-  $("pauseBtn").addEventListener("pointerdown",(e)=>{ e.preventDefault(); if(game.playing) openPause(); });
+  $("hideBtn").addEventListener("pointerdown",(e)=>{ e.preventDefault(); e.stopPropagation(); if(game.playing) toggleHide(); }, {passive:false});
+  $("useBtn").addEventListener("pointerdown",(e)=>{ e.preventDefault(); e.stopPropagation(); if(game.playing) pickupOrInteract(); }, {passive:false});
+  $("pauseBtn").addEventListener("pointerdown",(e)=>{ e.preventDefault(); e.stopPropagation(); if(game.playing) openPause(); }, {passive:false});
 }
 bindPad();
 
@@ -963,6 +880,7 @@ window.addEventListener("keydown",(e)=>{
   if(e.key===" ") { if(game.playing) pickupOrInteract(); }
   if(e.key==="Escape") { if(game.playing) openPause(); }
 },{passive:false});
+
 window.addEventListener("keyup",(e)=>{
   if(e.key==="ArrowUp"||e.key==="w") keys.up=false;
   if(e.key==="ArrowDown"||e.key==="s") keys.down=false;
@@ -977,7 +895,6 @@ window.addEventListener("keyup",(e)=>{
 function canHideHere(){
   const tx=Math.round(player.x), ty=Math.round(player.y);
   if(!inb(tx,ty)) return false;
-  // Can hide if near a hide spot tile (within 1 tile)
   for(let oy=-1;oy<=1;oy++){
     for(let ox=-1;ox<=1;ox++){
       const nx=tx+ox, ny=ty+oy;
@@ -986,7 +903,6 @@ function canHideHere(){
   }
   return false;
 }
-
 function toggleHide(){
   if(player.hideCooldown>0) return;
   if(player.hidden){
@@ -1002,37 +918,25 @@ function toggleHide(){
 }
 
 /* =========================
-   Pickup / Interact
+   Pickup
 ========================= */
 function pickupOrInteract(){
-  // Pickup any item in 1 tile radius
   const px=Math.round(player.x), py=Math.round(player.y);
-  let picked=false;
-
   for(const it of items){
     if(it.taken) continue;
     const d = Math.abs(it.x-px)+Math.abs(it.y-py);
     if(d<=1){
       it.taken=true;
       invAdd(it.kind);
-      picked=true;
-      // Multiplayer: if in MP, host can broadcast pickups (simple version here is local only)
-      if(game.multiplayer){
-        mpMarkPickupTaken(it);
-      }
-      break;
+      if(game.multiplayer) mpMarkPickupTaken(it);
+      return;
     }
   }
-
-  if(!picked){
-    // If Santa difficulty and you have ornaments in misc slot, allow "use" to count them
-    // (Ornaments also count automatically if you use the misc slot)
-    toast("Nothing to pick up.");
-  }
+  toast("Nothing to pick up.");
 }
 
 /* =========================
-   Start / End run
+   Run control
 ========================= */
 function resetRun(difficultyKey){
   game.params = diffParams(difficultyKey);
@@ -1040,22 +944,17 @@ function resetRun(difficultyKey){
   game.inGameMinute = DAY_START_MIN;
   game.playSecondsThisRun=0;
 
-  // Start position (store)
   player.x=14; player.y=14;
   player.vx=0; player.vy=0;
   player.health=100; player.hunger=100; player.thirst=100; player.stamina=100;
   player.hidden=false; player.hideCooldown=0; player.damageCooldown=0;
   player.ornaments=0;
 
-  // Reset items taken
   for(const it of items) it.taken=false;
 
-  // Enemies
   enemies=[];
   const p=game.params;
-  for(let i=0;i<p.enemyCount;i++){
-    enemies.push(makeEnemy(rand(20,100), rand(20,65), i%3));
-  }
+  for(let i=0;i<p.enemyCount;i++) enemies.push(makeEnemy(rand(20,100), rand(20,65), i%3));
 
   renderInv();
   updateHud();
@@ -1071,22 +970,16 @@ function winRun(){
   if(SAVE.survivedTotal>=10) SAVE.unlocks.hard=true;
   saveNow();
   toast("You survived!");
-  setTimeout(()=>{
-    showMenu();
-  }, 700);
+  setTimeout(()=>showMenu(), 700);
 }
-
 function loseRun(){
   game.playing=false;
   game.paused=false;
   SAVE.survivedStreak=0;
   saveNow();
   toast("You got caught...");
-  setTimeout(()=>{
-    showMenu();
-  }, 700);
+  setTimeout(()=>showMenu(), 700);
 }
-
 function showMenu(){
   game.inMenu=true;
   game.playing=false;
@@ -1095,7 +988,6 @@ function showMenu(){
   showScreen("menuScreen");
   refreshMenuLocks();
 }
-
 function startSolo(){
   game.multiplayer=false;
   game.mp.enabled=false;
@@ -1108,7 +1000,6 @@ function startSolo(){
   showScreen(null);
   toast("Survive till 8:00 AM!");
 }
-
 function startFromRoom(diffKey){
   game.multiplayer=true;
   game.mp.enabled=true;
@@ -1118,7 +1009,6 @@ function startFromRoom(diffKey){
   showScreen(null);
   toast("Multiplayer started!");
 }
-
 function openPause(){
   game.paused=true;
   $("pauseInfo").innerHTML = `
@@ -1131,7 +1021,7 @@ function openPause(){
 }
 
 /* =========================
-   HUD update
+   HUD
 ========================= */
 function setBar(fillEl, txtEl, v){
   v=clamp(v,0,100);
@@ -1157,7 +1047,7 @@ function updateHud(){
 }
 
 /* =========================
-   Movement + collisions
+   Collision
 ========================= */
 function isSolidAt(x,y){
   const tx=Math.floor(x), ty=Math.floor(y);
@@ -1165,12 +1055,9 @@ function isSolidAt(x,y){
   return solid[idx(tx,ty)]===1;
 }
 function moveWithCollision(nx,ny){
-  // Simple AABB-ish per-tile collision
   const r=0.22;
-  // X
   let x=player.x, y=player.y;
   if(!isSolidAt(nx+r,y) && !isSolidAt(nx-r,y)) x=nx;
-  // Y
   if(!isSolidAt(x,ny+r) && !isSolidAt(x,ny-r)) y=ny;
   player.x=x; player.y=y;
 }
@@ -1178,16 +1065,11 @@ function moveWithCollision(nx,ny){
 /* =========================
    Enemy logic
 ========================= */
-function dist(a,b,c,d){
-  const dx=a-c, dy=b-d;
-  return Math.hypot(dx,dy);
-}
+function dist(a,b,c,d){ return Math.hypot(a-c,b-d); }
 function enemyCanSee(e){
   if(player.hidden) return false;
   const d=dist(e.x,e.y,player.x,player.y);
   if(d>game.params.enemySight) return false;
-
-  // simple line check: sample along line for walls
   const steps = Math.ceil(d*4);
   for(let i=1;i<steps;i++){
     const t=i/steps;
@@ -1197,22 +1079,18 @@ function enemyCanSee(e){
   }
   return true;
 }
-
 function enemyPickPatrolTarget(e){
-  // Patrol around mall corridors
   e.tx = clamp(Math.floor(e.x) + rand(-10,10), 6, WORLD_W-7);
   e.ty = clamp(Math.floor(e.y) + rand(-8,8), 6, WORLD_H-7);
 }
-
 function enemyStep(e, dt){
   if(e.hitCooldown>0) e.hitCooldown-=dt;
 
   const speed = game.params.enemySpeed;
-
   const sees = enemyCanSee(e);
   if(sees){
     e.mode="chase";
-    e.spotTimer = 0.65; // keep chasing briefly
+    e.spotTimer = 0.65;
   }else{
     e.spotTimer = Math.max(0, e.spotTimer - dt);
     if(e.spotTimer<=0) e.mode="patrol";
@@ -1220,8 +1098,7 @@ function enemyStep(e, dt){
 
   let tx=e.tx, ty=e.ty;
   if(e.mode==="chase"){
-    tx = player.x;
-    ty = player.y;
+    tx = player.x; ty = player.y;
   }else{
     if(dist(e.x,e.y,e.tx,e.ty)<0.8) enemyPickPatrolTarget(e);
   }
@@ -1231,15 +1108,12 @@ function enemyStep(e, dt){
   const vx = (dx/d)*speed;
   const vy = (dy/d)*speed;
 
-  // Move with collision
   const nx=e.x + vx*dt*3.2;
   const ny=e.y + vy*dt*3.2;
 
-  // Enemies collide with walls
   if(!isSolidAt(nx, e.y)) e.x=nx;
   if(!isSolidAt(e.x, ny)) e.y=ny;
 
-  // Hit player
   const hitD = dist(e.x,e.y,player.x,player.y);
   if(hitD<0.75 && e.hitCooldown<=0){
     e.hitCooldown=1.05;
@@ -1253,12 +1127,9 @@ function enemyStep(e, dt){
 }
 
 /* =========================
-   Drawing (pixel art)
+   Drawing
 ========================= */
 function drawTile(x,y,t){
-  // x,y in screen pixels already at TILE scale on our internal render grid
-  // We'll draw with pixel-ish blocks.
-  // Colors
   if(t===T.FLOOR){
     ctx.fillStyle="#111a2e"; ctx.fillRect(x,y,TILE,TILE);
     ctx.fillStyle="rgba(255,255,255,.03)"; ctx.fillRect(x+2,y+2,2,2);
@@ -1310,150 +1181,78 @@ function drawTile(x,y,t){
     ctx.fillStyle="#111a2e"; ctx.fillRect(x,y,TILE,TILE);
   }
 }
-
 function drawItem(it, sx, sy){
   const kind=it.kind;
-  // small pixel icons
   if(kind.type==="food"){
-    // burger/chips etc
-    ctx.fillStyle="rgba(0,0,0,.35)";
-    ctx.fillRect(sx+4,sy+10,8,4);
-    ctx.fillStyle="#ffd36b";
-    ctx.fillRect(sx+5,sy+9,6,2);
-    ctx.fillStyle="#7a2b3b";
-    ctx.fillRect(sx+5,sy+11,6,2);
+    ctx.fillStyle="rgba(0,0,0,.35)"; ctx.fillRect(sx+4,sy+10,8,4);
+    ctx.fillStyle="#ffd36b"; ctx.fillRect(sx+5,sy+9,6,2);
+    ctx.fillStyle="#7a2b3b"; ctx.fillRect(sx+5,sy+11,6,2);
   }else if(kind.type==="drink"){
-    ctx.fillStyle="#6bc7ff";
-    ctx.fillRect(sx+6,sy+6,4,8);
-    ctx.fillStyle="rgba(255,255,255,.35)";
-    ctx.fillRect(sx+7,sy+7,1,5);
-    if(kind.name==="soda"){
-      ctx.fillStyle="#ff6b7a";
-      ctx.fillRect(sx+5,sy+5,6,2);
-    }
+    ctx.fillStyle="#6bc7ff"; ctx.fillRect(sx+6,sy+6,4,8);
+    ctx.fillStyle="rgba(255,255,255,.35)"; ctx.fillRect(sx+7,sy+7,1,5);
+    if(kind.name==="soda"){ ctx.fillStyle="#ff6b7a"; ctx.fillRect(sx+5,sy+5,6,2); }
   }else if(kind.type==="ornament"){
-    ctx.fillStyle="#ffd36b";
-    ctx.fillRect(sx+7,sy+5,2,2);
-    ctx.fillStyle="#ff6b7a";
-    ctx.fillRect(sx+6,sy+7,4,4);
-    ctx.fillStyle="rgba(255,255,255,.25)";
-    ctx.fillRect(sx+6,sy+7,2,2);
+    ctx.fillStyle="#ffd36b"; ctx.fillRect(sx+7,sy+5,2,2);
+    ctx.fillStyle="#ff6b7a"; ctx.fillRect(sx+6,sy+7,4,4);
+    ctx.fillStyle="rgba(255,255,255,.25)"; ctx.fillRect(sx+6,sy+7,2,2);
   }
 }
-
-function drawPlayer(px,py, isOther=false){
-  // px,py are world coords in tiles; we'll transform externally
-  // Pixel art character: body + head + scarf (Christmas)
-  const sx = px, sy = py;
+function drawPlayer(sx,sy, isOther=false){
   const c1 = isOther ? "#67f0a5" : "#7bdcff";
   const c2 = isOther ? "#1e5640" : "#24365a";
 
-  // shadow
-  ctx.fillStyle="rgba(0,0,0,.35)";
-  ctx.fillRect(sx-6, sy+6, 12, 3);
+  ctx.fillStyle="rgba(0,0,0,.35)"; ctx.fillRect(sx-6, sy+6, 12, 3);
+  ctx.fillStyle=c2; ctx.fillRect(sx-4, sy+2, 3, 5); ctx.fillRect(sx+1, sy+2, 3, 5);
+  ctx.fillStyle=c1; ctx.fillRect(sx-5, sy-3, 10, 7);
 
-  // legs
-  ctx.fillStyle=c2;
-  ctx.fillRect(sx-4, sy+2, 3, 5);
-  ctx.fillRect(sx+1, sy+2, 3, 5);
+  ctx.fillStyle="#ff6b7a"; ctx.fillRect(sx-5, sy-1, 10, 2); ctx.fillRect(sx+3, sy+1, 2, 4);
+  ctx.fillStyle="#f2c7a3"; ctx.fillRect(sx-4, sy-9, 8, 6);
+  ctx.fillStyle="#2b1635"; ctx.fillRect(sx-4, sy-9, 8, 2);
+  ctx.fillStyle="rgba(0,0,0,.45)"; ctx.fillRect(sx-2, sy-6, 1, 1); ctx.fillRect(sx+1, sy-6, 1, 1);
 
-  // body
-  ctx.fillStyle=c1;
-  ctx.fillRect(sx-5, sy-3, 10, 7);
-
-  // scarf
-  ctx.fillStyle="#ff6b7a";
-  ctx.fillRect(sx-5, sy-1, 10, 2);
-  ctx.fillRect(sx+3, sy+1, 2, 4);
-
-  // head
-  ctx.fillStyle="#f2c7a3";
-  ctx.fillRect(sx-4, sy-9, 8, 6);
-
-  // hair/hat
-  ctx.fillStyle="#2b1635";
-  ctx.fillRect(sx-4, sy-9, 8, 2);
-
-  // eyes
-  ctx.fillStyle="rgba(0,0,0,.45)";
-  ctx.fillRect(sx-2, sy-6, 1, 1);
-  ctx.fillRect(sx+1, sy-6, 1, 1);
-
-  // hidden overlay
   if(!isOther && player.hidden){
-    ctx.fillStyle="rgba(0,0,0,.45)";
-    ctx.fillRect(sx-7, sy-11, 14, 16);
-    ctx.fillStyle="rgba(255,255,255,.12)";
-    ctx.fillRect(sx-6, sy-10, 12, 14);
+    ctx.fillStyle="rgba(0,0,0,.45)"; ctx.fillRect(sx-7, sy-11, 14, 16);
+    ctx.fillStyle="rgba(255,255,255,.12)"; ctx.fillRect(sx-6, sy-10, 12, 14);
   }
 }
-
-function drawEnemy(ex,ey, variant){
-  const sx=ex, sy=ey;
-  // shadow
-  ctx.fillStyle="rgba(0,0,0,.35)";
-  ctx.fillRect(sx-6, sy+6, 12, 3);
-
-  // uniform colors per variant
+function drawEnemy(sx,sy, variant){
+  ctx.fillStyle="rgba(0,0,0,.35)"; ctx.fillRect(sx-6, sy+6, 12, 3);
   const top = variant===0 ? "#ffd36b" : variant===1 ? "#ff6b7a" : "#6bc7ff";
   const uni = "#3a4a6f";
-
-  // legs
-  ctx.fillStyle=uni;
-  ctx.fillRect(sx-4, sy+2, 3, 5);
-  ctx.fillRect(sx+1, sy+2, 3, 5);
-
-  // body
-  ctx.fillStyle=top;
-  ctx.fillRect(sx-5, sy-3, 10, 7);
-
-  // head
-  ctx.fillStyle="#e5b895";
-  ctx.fillRect(sx-4, sy-9, 8, 6);
-
-  // hat
-  ctx.fillStyle="#111a2e";
-  ctx.fillRect(sx-4, sy-10, 8, 2);
-
-  // badge
-  ctx.fillStyle="#ffffff";
-  ctx.fillRect(sx+2, sy-1, 2, 2);
+  ctx.fillStyle=uni; ctx.fillRect(sx-4, sy+2, 3, 5); ctx.fillRect(sx+1, sy+2, 3, 5);
+  ctx.fillStyle=top; ctx.fillRect(sx-5, sy-3, 10, 7);
+  ctx.fillStyle="#e5b895"; ctx.fillRect(sx-4, sy-9, 8, 6);
+  ctx.fillStyle="#111a2e"; ctx.fillRect(sx-4, sy-10, 8, 2);
+  ctx.fillStyle="#ffffff"; ctx.fillRect(sx+2, sy-1, 2, 2);
 }
 
 /* =========================
-   Camera + rendering
+   Camera + render
 ========================= */
 let cam = {x:0,y:0};
 function render(){
-  // Internal render resolution in tiles then scale to canvas
   const scale = Math.floor(Math.min(canvas.width/(VIEW_TILES_X*TILE), canvas.height/(VIEW_TILES_Y*TILE)));
   const rw = VIEW_TILES_X*TILE;
   const rh = VIEW_TILES_Y*TILE;
 
-  // clear
   ctx.setTransform(1,0,0,1,0,0);
   ctx.imageSmoothingEnabled=false;
   ctx.fillStyle="#0b1220";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // compute camera target (center player)
   const targetX = player.x*TILE - rw/2;
   const targetY = player.y*TILE - rh/2;
   cam.x = lerp(cam.x, targetX, 0.14);
   cam.y = lerp(cam.y, targetY, 0.14);
-
-  // clamp camera to world bounds
   cam.x = clamp(cam.x, 0, WORLD_W*TILE - rw);
   cam.y = clamp(cam.y, 0, WORLD_H*TILE - rh);
 
-  // center render
   const ox = Math.floor((canvas.width - rw*scale)/2);
   const oy = Math.floor((canvas.height - rh*scale)/2);
 
   ctx.translate(ox, oy);
   ctx.scale(scale, scale);
 
-  // draw tiles in view
   const startTx = Math.floor(cam.x / TILE);
   const startTy = Math.floor(cam.y / TILE);
   const endTx = startTx + VIEW_TILES_X + 2;
@@ -1469,92 +1268,58 @@ function render(){
     }
   }
 
-  // ambiance (not fully dark)
-  // We add a vignette overlay later.
-
-  // draw items
   for(const it of items){
     if(it.taken) continue;
-    const sx = it.x*TILE - cam.x;
-    const sy = it.y*TILE - cam.y;
-    drawItem(it, sx, sy);
+    drawItem(it, it.x*TILE - cam.x, it.y*TILE - cam.y);
   }
 
-  // draw other players (multiplayer)
   if(game.multiplayer){
     for(const op of Object.values(game.mp.otherPlayers)){
-      const sx = op.x*TILE - cam.x + 8;
-      const sy = op.y*TILE - cam.y + 8;
-      drawPlayer(sx,sy,true);
+      drawPlayer(op.x*TILE - cam.x + 8, op.y*TILE - cam.y + 8, true);
     }
   }
 
-  // draw enemies
-  for(const e of enemies){
-    const sx = e.x*TILE - cam.x + 8;
-    const sy = e.y*TILE - cam.y + 8;
-    drawEnemy(sx,sy,e.variant);
-  }
+  for(const e of enemies) drawEnemy(e.x*TILE - cam.x + 8, e.y*TILE - cam.y + 8, e.variant);
+  drawPlayer(player.x*TILE - cam.x + 8, player.y*TILE - cam.y + 8, false);
 
-  // draw player
-  {
-    const sx = player.x*TILE - cam.x + 8;
-    const sy = player.y*TILE - cam.y + 8;
-    drawPlayer(sx,sy,false);
-  }
-
-  // Vignette + mall light feel
+  // vignette
   ctx.setTransform(1,0,0,1,0,0);
   const g=ctx.createRadialGradient(canvas.width*0.5, canvas.height*0.5, canvas.width*0.2, canvas.width*0.5, canvas.height*0.55, canvas.width*0.62);
   g.addColorStop(0,"rgba(0,0,0,0.00)");
   g.addColorStop(1,"rgba(0,0,0,0.55)");
-  ctx.fillStyle=g;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // Small top glow like mall skylight
   const g2=ctx.createRadialGradient(canvas.width*0.5, canvas.height*0.12, 10, canvas.width*0.5, canvas.height*0.12, canvas.width*0.65);
   g2.addColorStop(0,"rgba(255,255,255,0.10)");
   g2.addColorStop(1,"rgba(255,255,255,0.00)");
-  ctx.fillStyle=g2;
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle=g2; ctx.fillRect(0,0,canvas.width,canvas.height);
 }
 
 /* =========================
-   Game loop
+   Loop
 ========================= */
 function tick(now){
   const dt = Math.min(0.05, (now - game.lastTick)/1000);
   game.lastTick = now;
 
-  // Total playtime stats (only when actually playing)
   if(game.playing && !game.paused){
     SAVE.totalPlaySeconds += dt;
     game.playSecondsThisRun += dt;
-  }
 
-  if(game.playing && !game.paused){
-    // time passes: 1 sec = 1 minute
-    game.inGameMinute += dt * (60/REAL_SEC_PER_INGAME_MIN) / 60; // dt minutes per second -> dt*1min
-    // simpler: dt seconds => dt minutes
-    game.inGameMinute += dt * 1; // 1 in-game minute per real second
+    // time: 1 real second = 1 in-game minute
+    game.inGameMinute += dt * 1;
 
-    if(game.inGameMinute>=DAY_END_MIN){
-      // win condition OR Santa ornaments
-      winRun();
-    }
+    if(game.inGameMinute>=DAY_END_MIN) winRun();
 
-    // Drain needs
     const p=game.params;
     player.hunger = clamp(player.hunger - p.hungerDrain*dt*10, 0, 100);
     player.thirst = clamp(player.thirst - p.thirstDrain*dt*10, 0, 100);
 
-    // If starving/dehydrated, lose health slowly
     if(player.hunger<=0 || player.thirst<=0){
       player.health = clamp(player.health - 6*dt, 0, 100);
       if(player.health<=0) loseRun();
     }
 
-    // stamina
     const moving = keys.up||keys.down||keys.left||keys.right;
     const wantSprint = sprintHeld && moving && !player.hidden;
     const canSprint = player.stamina>2;
@@ -1562,14 +1327,11 @@ function tick(now){
     let spd = player.speed;
     if(wantSprint && canSprint){
       spd *= 1.55;
-      player.stamina = clamp(player.stamina - p.staminaDrain*dt*18, 0, 100); // slower drain than before
+      player.stamina = clamp(player.stamina - p.staminaDrain*dt*18, 0, 100);
     }else{
-      // regen when not sprinting
-      const regen = p.staminaRegen*dt*14;
-      player.stamina = clamp(player.stamina + regen, 0, 100);
+      player.stamina = clamp(player.stamina + p.staminaRegen*dt*14, 0, 100);
     }
 
-    // Move (disable movement when hidden)
     if(player.hidden){
       player.vx=0; player.vy=0;
     }else{
@@ -1580,50 +1342,36 @@ function tick(now){
       if(keys.down) my+=1;
       const mag=Math.hypot(mx,my) || 1;
       mx/=mag; my/=mag;
+
       player.vx = mx*spd;
       player.vy = my*spd;
 
-      const nx = player.x + player.vx*dt*3.2;
-      const ny = player.y + player.vy*dt*3.2;
-      moveWithCollision(nx,ny);
+      moveWithCollision(player.x + player.vx*dt*3.2, player.y + player.vy*dt*3.2);
     }
 
-    // cooldowns
     if(player.hideCooldown>0) player.hideCooldown-=dt;
     if(player.damageCooldown>0) player.damageCooldown-=dt;
 
-    // enemies
     for(const e of enemies) enemyStep(e, dt);
 
-    // Santa difficulty win condition (ornaments)
-    if(game.difficultyKey==="santa" && player.ornaments>=5){
-      winRun();
-    }
+    if(game.difficultyKey==="santa" && player.ornaments>=5) winRun();
 
-    // Multiplayer sync
-    if(game.multiplayer){
-      mpTick(dt);
-    }
+    if(game.multiplayer) mpTick(dt);
 
     updateHud();
   }
 
-  if(game.playing){
-    render();
-  }
-
+  if(game.playing) render();
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
 
 /* =========================
-   Buttons (Menu)
+   Menu buttons
 ========================= */
 $("playSoloBtn").onclick = ()=> startSolo();
 
-$("howBtn").onclick = ()=>{
-  showScreen("howScreen");
-};
+$("howBtn").onclick = ()=> showScreen("howScreen");
 $("howBackBtn").onclick = ()=> showScreen("menuScreen");
 
 $("statsBtn").onclick = ()=>{
@@ -1650,52 +1398,30 @@ $("resetBtn").onclick = ()=>{
   showScreen("menuScreen");
 };
 
-$("resumeBtn").onclick = ()=>{
-  game.paused=false;
-  showScreen(null);
-};
-$("quitBtn").onclick = ()=>{
-  game.paused=false;
-  if(game.multiplayer){
-    mpLeaveRoom();
-  }
-  showMenu();
-};
-$("mpLeaveBtn").onclick = ()=>{
-  mpLeaveRoom();
-  showMenu();
-};
+$("resumeBtn").onclick = ()=>{ game.paused=false; showScreen(null); };
+$("quitBtn").onclick = ()=>{ game.paused=false; if(game.multiplayer) mpLeaveRoom(); showMenu(); };
+$("mpLeaveBtn").onclick = ()=>{ mpLeaveRoom(); showMenu(); };
 
-/* Name save */
 $("nameInput").value = SAVE.name;
 $("nameInput").addEventListener("input", ()=>{
   SAVE.name = $("nameInput").value.trim() || SAVE.name;
   saveNow();
 });
 
-/* Difficulty select save */
 $("diffSelect").value = SAVE.lastDifficulty || "easy";
 $("diffSelect").addEventListener("change", ()=>{
   SAVE.lastDifficulty = $("diffSelect").value;
   saveNow();
 });
 
-/* Pause open by UI button already wired */
-
 renderInv();
 updateHud();
 
 /* =========================================================
-   MULTIPLAYER (WORLDWIDE) — Firebase RTDB
-   - Host creates room code (public list)
-   - Join from list
-   - Lobby players list
-   - Sync player x/y/hp/hidden/ornaments
-   - Host starts when >= 2 players
+   MULTIPLAYER — Firebase RTDB
 ========================================================= */
 const MP = game.mp;
-
-function r(p){ return ref(db, p); }
+function r(path){ return ref(db, path); }
 
 function makeRoomCode(){
   const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -1710,7 +1436,6 @@ async function mpCreateRoom(maxPlayers, diffKey){
   MP.isHost = true;
   MP.otherPlayers = {};
 
-  // Room core
   await set(r(`rooms/${code}`), {
     hostId: MP.playerId,
     hostName: SAVE.name,
@@ -1720,7 +1445,6 @@ async function mpCreateRoom(maxPlayers, diffKey){
     createdAt: serverTimestamp()
   });
 
-  // Public listing
   await set(r(`publicRooms/${code}`), {
     hostName: SAVE.name,
     maxPlayers,
@@ -1729,7 +1453,6 @@ async function mpCreateRoom(maxPlayers, diffKey){
     createdAt: Date.now()
   });
 
-  // Add host player node
   await set(r(`rooms/${code}/players/${MP.playerId}`), {
     id: MP.playerId,
     name: SAVE.name,
@@ -1744,6 +1467,7 @@ async function mpCreateRoom(maxPlayers, diffKey){
   onDisconnect(r(`publicRooms/${code}`)).remove();
 
   mpWatchRoom();
+  mpWatchPickups();
   return code;
 }
 
@@ -1774,6 +1498,7 @@ async function mpJoinRoom(code){
 
   onDisconnect(r(`rooms/${code}/players/${MP.playerId}`)).remove();
   mpWatchRoom();
+  mpWatchPickups();
 }
 
 function mpWatchPublicRooms(){
@@ -1798,13 +1523,15 @@ function mpWatchPublicRooms(){
           <div><b>${esc(s.hostName)}’s Server</b></div>
           <div class="tiny muted">Max ${s.maxPlayers} • ${esc(s.diffKey)}</div>
         </div>
-        <button class="btn small" onclick="window.__joinRoom('${s.id}')">Join</button>
+        <button class="btn small" data-join="${s.id}">Join</button>
       </div>
     `).join("");
+
+    list.querySelectorAll("button[data-join]").forEach(btn=>{
+      btn.addEventListener("click", ()=> mpJoinRoom(btn.getAttribute("data-join")));
+    });
   });
 }
-
-window.__joinRoom = (id)=> mpJoinRoom(id);
 
 function mpWatchRoom(){
   if(MP.roomUnsub) MP.roomUnsub();
@@ -1820,11 +1547,13 @@ function mpWatchRoom(){
 
     MP.hostId = room.hostId;
 
-    // Lobby UI when not started
     if(!room.started && !game.playing){
       showScreen("lobbyScreen");
-      $("lobbyInfo").innerHTML = `<b>${esc(room.hostName)}’s Server</b> • ${esc(room.diffKey)} • ${Object.keys(room.players||{}).length}/${room.maxPlayers}<br><span class="tiny muted">Room code: <b>${esc(MP.roomId)}</b></span>`;
       const players = Object.values(room.players||{});
+      $("lobbyInfo").innerHTML =
+        `<b>${esc(room.hostName)}’s Server</b> • ${esc(room.diffKey)} • ${players.length}/${room.maxPlayers}<br>` +
+        `<span class="tiny muted">Room code: <b>${esc(MP.roomId)}</b></span>`;
+
       $("playerList").innerHTML = players.map((p,i)=>`<div style="padding:6px 0;"><b>${i+1}.</b> ${esc(p.name)}</div>`).join("");
 
       const isHostNow = (room.hostId === MP.playerId);
@@ -1832,14 +1561,12 @@ function mpWatchRoom(){
       $("hostStartBtn").disabled = players.length < 2;
     }
 
-    // If started and we are not in game yet, start
     if(room.started && !game.playing){
       game.multiplayer=true;
       game.mp.enabled=true;
       startFromRoom(room.diffKey);
     }
 
-    // Update other players live while game is running
     if(game.playing){
       const playersObj = room.players||{};
       const others={};
@@ -1864,10 +1591,8 @@ async function mpStartRoom(){
 async function mpLeaveRoom(){
   if(!MP.roomId) return;
 
-  // Remove my player
   await remove(r(`rooms/${MP.roomId}/players/${MP.playerId}`));
 
-  // If host, delete room + listing
   const roomSnap = await get(r(`rooms/${MP.roomId}`));
   const room = roomSnap.val();
   const host = room && room.hostId === MP.playerId;
@@ -1877,7 +1602,6 @@ async function mpLeaveRoom(){
     await remove(r(`rooms/${MP.roomId}`));
   }
 
-  // Cleanup listeners
   if(MP.roomsUnsub) { MP.roomsUnsub(); MP.roomsUnsub=null; }
   if(MP.roomUnsub) { MP.roomUnsub(); MP.roomUnsub=null; }
 
@@ -1891,17 +1615,13 @@ async function mpLeaveRoom(){
 }
 
 function mpTick(dt){
-  // send position + health state
   if(!MP.roomId) return;
-
-  // Throttle updates (10x/sec)
   mpTick._t = (mpTick._t||0) + dt;
   if(mpTick._t < 0.10) return;
   mpTick._t = 0;
 
   update(r(`rooms/${MP.roomId}/players/${MP.playerId}`), {
-    x: player.x,
-    y: player.y,
+    x: player.x, y: player.y,
     hp: player.health,
     hidden: player.hidden,
     ornaments: player.ornaments,
@@ -1909,10 +1629,6 @@ function mpTick(dt){
   }).catch(()=>{});
 }
 
-/* Optional: sync pickups so everyone matches
-   Simple approach: host writes taken pickup indices.
-   Here we keep it lightweight: when you pick up, mark in DB under room/pickups/{index}=true
-*/
 function mpMarkPickupTaken(it){
   if(!MP.roomId) return;
   const i = items.indexOf(it);
@@ -1920,7 +1636,6 @@ function mpMarkPickupTaken(it){
   update(r(`rooms/${MP.roomId}/pickups/${i}`), { taken:true }).catch(()=>{});
 }
 
-// Listen for pickups taken
 function mpWatchPickups(){
   if(!MP.roomId) return;
   onValue(r(`rooms/${MP.roomId}/pickups`), (snap)=>{
@@ -1932,24 +1647,18 @@ function mpWatchPickups(){
   });
 }
 
-/* ===== Multiplayer UI buttons ===== */
+/* ===== Multiplayer UI ===== */
 $("multiBtn").onclick = ()=>{
   $("hostPanel").style.display="none";
   $("joinPanel").style.display="none";
   showScreen("multiScreen");
 };
-
-$("multiBackBtn").onclick = ()=>{
-  showScreen("menuScreen");
-};
+$("multiBackBtn").onclick = ()=> showScreen("menuScreen");
 
 $("hostBtn").onclick = ()=>{
   $("hostPanel").style.display="block";
   $("joinPanel").style.display="none";
-  // set host diff options based on unlocks
-  const s=$("hostDiffSelect");
-  // allow selection even if locked for host (but you can keep it strict if you want)
-  s.value = $("diffSelect").value || "easy";
+  $("hostDiffSelect").value = $("diffSelect").value || "easy";
 };
 
 $("joinBtn").onclick = ()=>{
@@ -1963,15 +1672,10 @@ $("refreshServersBtn").onclick = ()=> mpWatchPublicRooms();
 $("createServerBtn").onclick = async ()=>{
   const maxPlayers = parseInt($("maxPlayersSelect").value,10);
   const diffKey = $("hostDiffSelect").value;
-
-  // Enforce unlocks for host creation (optional)
   if(diffKey==="medium" && !SAVE.unlocks.medium) return toast("Medium locked (survive 5x).");
   if(diffKey==="hard" && !SAVE.unlocks.hard) return toast("Hard locked (survive 10x).");
-
   toast("Creating server...");
   await mpCreateRoom(maxPlayers, diffKey);
-  // watch pickups for sync
-  mpWatchPickups();
 };
 
 $("lobbyLeaveBtn").onclick = async ()=>{
@@ -1979,47 +1683,20 @@ $("lobbyLeaveBtn").onclick = async ()=>{
   showScreen("multiScreen");
 };
 
-$("hostStartBtn").onclick = async ()=>{
-  await mpStartRoom();
-  mpWatchPickups();
-};
+$("hostStartBtn").onclick = async ()=>{ await mpStartRoom(); };
 
 /* =========================
-   Start in menu
+   Start
 ========================= */
-showMenu();
-render(); // draw background once
-
-</script>
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-  // 🔴 PASTE YOUR FIREBASE VALUES HERE
-  const firebaseConfig = {
-    apiKey: "AIzaSyAnwWcA5NCQWmgeePIN-CzUZx7hr8wq_iE",
-    authDomain: "locked-till-morning.firebaseapp.com",
-    databaseURL: "https://locked-till-morning-default-rtdb.firebaseio.com",
-    projectId: "locked-till-morning",
-    storageBucket: "locked-till-morning.firebasestorage.app",
-    messagingSenderId: "148695967920",
-    appId: "1:148695967920:web:41553031e9084491e13375"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const auth = getAuth(app);
-
-  signInAnonymously(auth);
-
-  // Expose for the game
-  window.firebaseDB = db;
-  window.firebaseRef = ref;
-  window.firebaseSet = set;
-  window.firebasePush = push;
-  window.firebaseOnValue = onValue;
-  window.firebaseRemove = remove;
+function showMenuStart(){
+  game.inMenu=true;
+  game.playing=false;
+  game.paused=false;
+  showScreen("menuScreen");
+  refreshMenuLocks();
+}
+showMenuStart();
+render();
 </script>
 </body>
 </html>
