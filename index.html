@@ -137,7 +137,7 @@
   </div>
 
   <div class="rightStack">
-    <button id="sprintBtn">🏃 Sprint: OFF</button>
+    <button id="sprintBtn">🏃 Hold to Sprint</button>
     <button id="invBtn">🎒 Inventory</button>
     <button id="hideBtn">🫥 Hide</button>
     <button id="pauseBtn">⏸ Menu</button>
@@ -208,6 +208,7 @@
     • Employees chase and attack you (slower).<br>
     • Pickups go into your <b>Inventory</b>. Tap <b>USE</b> to eat/drink.<br>
     • Food refills hunger. Drinks refill thirst. Drinks also give stamina <b>except soda</b>.<br>
+    • Sprint is <b>hold-to-sprint</b> (hold the Sprint button to run).<br>
     • Use <b>Hide</b> at hiding spots (locker-door animation).<br>
     • Clock speed: <b>1 second = 1 minute</b>.<br>
     • Santa Difficulty: collect <b>5 ornaments</b> before <b>8:00 AM</b>.
@@ -607,7 +608,7 @@ function resetWorld(){
   hideAnim.active=false; hideAnim.t=0; hideAnim.dir=0;
   cheer.active=false; cheer.t=0;
 
-  sprintBtn.textContent="🏃 Sprint: OFF";
+  updateSprintButton();
   resetInventory();
   closeInventory();
   updateUI();
@@ -651,7 +652,7 @@ function startIntervals(){
     player.hunger -= game.params.drainH;
     player.thirst -= game.params.drainT;
 
-    // Regen a bit slower while sprint toggle is ON, faster while walking/resting
+    // Regen a bit slower while sprint is ON, faster while walking/resting
     let regen = game.sprint ? 0.55 : 0.85;
     if(cheer.active) regen += 0.35;
     player.stamina = Math.min(100, player.stamina + regen);
@@ -712,7 +713,7 @@ function updateUI(){
   else if(hideAnim.active && hideAnim.dir===-1) hint="Leaving...";
   else if(game.hidden) hint="Hidden.";
   else if(cheer.active) hint=`Cheer buff active (${cheer.t}s)`;
-  else if(game.sprint) hint="Sprint ON (stamina drains while moving)";
+  else if(game.sprint) hint="Sprinting (hold button)";
   hideHintEl.textContent=hint;
 }
 
@@ -801,40 +802,65 @@ const sprintBtn=document.getElementById("sprintBtn");
 const hideBtn=document.getElementById("hideBtn");
 const pauseBtn=document.getElementById("pauseBtn");
 
-/* ---- SPRINT FIX (works while moving on iOS) ---- */
+/* ---------- HOLD-TO-SPRINT (FIXED FOR iOS) ---------- */
+let sprintPointerId = null;
+
+function updateSprintButton(){
+  sprintBtn.textContent = game.sprint ? "🏃 Sprinting…" : "🏃 Hold to Sprint";
+}
+
 function setSprint(on){
   game.sprint = !!on;
-  sprintBtn.textContent = game.sprint ? "🏃 Sprint: ON" : "🏃 Sprint: OFF";
+  updateSprintButton();
   updateUI();
 }
-function toggleSprintNow(e){
-  if(e){ e.preventDefault(); e.stopPropagation(); }
+
+// Press = sprint ON
+function sprintDown(e){
+  e.preventDefault();
+  e.stopPropagation();
   if(!game.playing) return;
   if(game.invOpen) return toast("Close inventory first.");
   if(game.hidden || hideAnim.active) return toast("Can't sprint while hiding.");
+  if(player.stamina <= 4) return toast("Too tired to sprint.");
 
-  if(game.sprint){
-    setSprint(false);
-    toast("Sprint OFF");
-    return;
-  }
-  if(player.stamina <= 8) return toast("Too tired to sprint.");
+  // lock this pointer (prevents weird multi-touch toggles)
+  sprintPointerId = (e.pointerId ?? "touch");
   setSprint(true);
-  toast("Sprint ON");
 }
-sprintBtn.addEventListener("pointerdown", toggleSprintNow, { passive:false });
-sprintBtn.addEventListener("touchstart", toggleSprintNow, { passive:false });
-sprintBtn.addEventListener("click", toggleSprintNow);
-/* ---- END SPRINT FIX ---- */
+
+// Release/cancel = sprint OFF
+function sprintUp(e){
+  if(sprintPointerId===null) return;
+  // if pointerId exists, only end if it's the same finger
+  if(e && e.pointerId!=null && sprintPointerId!=="touch" && e.pointerId!==sprintPointerId) return;
+
+  sprintPointerId = null;
+  setSprint(false);
+}
+
+// Only pointer events (no click/touchstart duplicates)
+sprintBtn.addEventListener("pointerdown", sprintDown, { passive:false });
+sprintBtn.addEventListener("pointerup", sprintUp, { passive:false });
+sprintBtn.addEventListener("pointercancel", sprintUp, { passive:false });
+sprintBtn.addEventListener("pointerleave", sprintUp, { passive:false });
+
+// kill click so it doesn't mess with hold behavior
+sprintBtn.addEventListener("click", (e)=>{ e.preventDefault(); e.stopPropagation(); });
+/* ---------- END HOLD-TO-SPRINT ---------- */
 
 hideBtn.onclick=()=>{
   if(!game.playing) return;
   if(game.invOpen) return toast("Close inventory first.");
   if(!game.inHideSpot) return toast("Not in a hiding spot.");
   if(hideAnim.active) return;
+
+  // can't stay sprinting while hiding
+  sprintPointerId=null;
+  setSprint(false);
+
   if(!game.hidden){
     hideAnim.active=true; hideAnim.dir=1; hideAnim.t=0; toast("Hiding...");
-    setSprint(false);
   }else{
     hideAnim.active=true; hideAnim.dir=-1; hideAnim.t=1; toast("Leaving...");
   }
@@ -1016,22 +1042,6 @@ function drawOrnament(wx,wy){
 function tintSnowOverlay(){ px(0,0,buf.width,buf.height,"rgba(220,240,255,0.06)"); }
 function drawNightOverlay(){ px(0,0,buf.width,buf.height,"rgba(14,18,28,0.56)"); }
 
-function drawHideDoorOverlay(){
-  if(hideAnim.t<=0) return;
-  const t=hideAnim.t, w=buf.width, h=buf.height;
-  const leftW=(w/2)*t, rightW=(w/2)*t;
-  px(0,0,leftW,h,"rgba(8,8,10,0.92)");
-  px(w-rightW,0,rightW,h,"rgba(8,8,10,0.92)");
-  px((w/2)-1,0,2,h,`rgba(255,255,255,${0.10*t})`);
-  bctx.fillStyle=`rgba(255,255,255,${0.75*t})`;
-  bctx.font="10px Arial";
-  bctx.textAlign="center";
-  bctx.fillText("HIDING", w/2, 22);
-  bctx.font="9px Arial";
-  bctx.fillText("stay quiet...", w/2, 34);
-  bctx.textAlign="left";
-}
-
 /* =========================
    LOOP
 ========================= */
@@ -1056,9 +1066,11 @@ function loop(now){
 
     const moving = (mx!==0 || my!==0);
 
+    // auto stop sprint if stamina runs out
     if(game.sprint && player.stamina<=0){
+      sprintPointerId=null;
       setSprint(false);
-      toast("Sprint ended (out of stamina).");
+      toast("Too tired to sprint.");
     }
 
     if(moving){
@@ -1072,8 +1084,9 @@ function loop(now){
       player.face=(mx>=0)?1:-1;
       moveWithCollision(player, player.x + mx*speed*dt, player.y + my*speed*dt, player.r);
 
+      // slower stamina drain
       if(game.sprint){
-        player.stamina = Math.max(0, player.stamina - (24*dt)); // slower drain
+        player.stamina = Math.max(0, player.stamina - (22*dt));
       }
     }
   }
@@ -1163,6 +1176,7 @@ function loop(now){
     }
   }
 
+  // draw
   px(0,0,buf.width,buf.height,"#e9eef3");
 
   const startX=Math.floor(cam.x/TILE)-2;
@@ -1178,14 +1192,13 @@ function loop(now){
   }
 
   drawDecor();
-
   for(const f of foods) if(!f.taken) drawFood(f.x,f.y,f.kind);
   for(const d of drinks) if(!d.taken) drawDrink(d.x,d.y,d.kind);
+
   if(EVENT.christmas){
     for(const h of holidayItems) if(!h.taken) drawHolidayItem(h.x,h.y,h.kind);
     tintSnowOverlay();
   }
-
   if(game.difficultyKey==="santa" && EVENT.christmas){
     for(const o of ornaments) if(!o.taken) drawOrnament(o.x,o.y);
   }
